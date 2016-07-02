@@ -1,5 +1,3 @@
-#this is a test
-
 #########This is a guideline for importing and formating the data as well as the code to generate all the graphs/figures
 
 # Set the correct root folder
@@ -10,12 +8,13 @@ library(ggplot2)
 library(plyr)
 library(dplyr)
 library(RColorBrewer)
+library(reshape2)
 
 #Function to convert a factor into a numeric
 as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
 
 #Import group1.csv
-my_data <- "tc.csv"
+my_data <- "tc_wide.csv"
 tc <- read.csv(my_data, sep = ",", header = TRUE)
 
 #Make sure you imported the CSV file
@@ -24,33 +23,57 @@ summary(tc)
 #Look at the headers for the data
 head(tc)
 
+##### MAY HAVE TO REPOSITION THIS FUNCTION TO ANOTHER SPOT
+#We want to be able to average the three representative placentas from each individual mouse
+# ie- we want to average placentas 1,2 and 3 and make it a new column
+
+tc <- transform(tc, plac.avg = rowMeans(tc[,6:8], #create a new row named "plac.avg" that avegages columsn 6-8 (placenta.1-placenta.3)
+                                        na.rm = TRUE)) #ignore NA values
+#see if tc works
+tc
+
+#Data is formated in "wide format" which is conducive for us to interpret but we need to make it 
+#into "long format" so that R can understand it better by using the "melt" function of the dplyr package
+
+melt(tc) #makes the column values organized by a single column named variable
+
+#rename the "melted" data as "tcl" [t]ime [c]ourse [l]ong format
+tcl <- melt(tc, id.vars = c("day"),
+            variable.name = "parameter", 
+            value.name = "value")
+
+
+#check if the data tcl is correct
+head(tcl)
+tail(tcl)
 
 #If there's missing values in the data it will show up at NA, you can tell R to ignore it by using the following function
-tc <- na.omit(tc)
+tclc<- na.omit(tcl) #[t]ime [c]ourse [l]ong format [c]orrected
+
+tclc
 
 #Check that the blank values no longer include "NA"
-summary(tc)
-head(tc)
-
+summary(tclc)
+head(tclc)
 
 #Check how R interprets the columns in the data
 #Sometimes you have your data in a particular order but R will organize them in alaphabetical order
-str(tc)
+str(tclc)
 
 
 # Make day column as factor
 # This effectlively tells R to treat your data as it and DON'T alphabetize it
 # You tell R which column you want it to read as a factor (leave it in the order that you entered the data)
-tc$day <- factor(tc$day, levels=c("0","5.5","10.5","14.5","17.5","1.p"))  #Adjust the day column and make it in the correct order
+tclc$day <- factor(tclc$day, levels=c("0","5.5","10.5","14.5","17.5","1.p"))  #Adjust the day column and make it in the correct order
 
 ## Test to see if parameter needs to be factored uniquely*****
-tc$parameter <- factor(tc$parameter, levels=unique(tc$parameter))
+tclc$parameter <- factor(tclc$parameter, levels=unique(tclc$parameter))
 
 #Verify the factor is in the correct order
-str(tc)
+str(tclc)
 
 #Summarize the data
-tc_data <- ddply(tc, c("day","parameter"), summarise,
+tc_data <- ddply(tclc, c("day","parameter"), summarise,
                  N    = length(value),
                  mean = mean(value),
                  sd   = sd(value),
@@ -142,7 +165,7 @@ dev.off()
 
 
 #Filter pups
-tc_pup_data <- tc_data[tc_data$parameter %in% c("pup"),]
+tc_pup_data <- tc_data[tc_data$parameter %in% c("pups"),]
 
 summary(tc_data)
 summary(tc_pup_data)
@@ -275,7 +298,7 @@ dev.off()
 #Calculation of finalized mean placenta weight throughout gestation
 
 #Calculation of Pup Implantation Within Uterine Horns
-tc_mean_plac_data <- tc_data[tc_data$parameter %in% c("mean.placenta"),]
+tc_mean_plac_data <- tc_data[tc_data$parameter %in% c("plac.avg"),]
 
 #Check if placenta data works
 summary(tc_mean_plac_data)
