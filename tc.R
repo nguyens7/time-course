@@ -1,7 +1,11 @@
 #########This is a guideline for importing and formating the data as well as the code to generate all the graphs/figures
 
+#To Clear working environment
+rm(list=ls())
+
 # Set the correct root folder
 setwd("~/Desktop/R_Folder")
+
 
 #Load ggplot2,plyr and dplyr packages
 library(ggplot2)
@@ -22,13 +26,14 @@ summary(tc)
 
 #Look at the headers for the data
 head(tc)
+tail(tc)
 
 ##### MAY HAVE TO REPOSITION THIS FUNCTION TO ANOTHER SPOT
 #We want to be able to average the three representative placentas from each individual mouse
 # ie- we want to average placentas 1,2 and 3 and make it a new column
 
-tc <- transform(tc, plac.avg = rowMeans(tc[,6:8], #create a new row named "plac.avg" that avegages columsn 6-8 (placenta.1-placenta.3)
-                                        na.rm = TRUE)) #ignore NA values
+tc <- transform(tc, plac.avg = rowMeans(tc[,6:8], #create a new row named "plac.avg" that averages columns 6-8 (placenta.1-placenta.3)
+                  na.rm = TRUE)) #ignore NA values
 #see if tc works
 tc
 
@@ -39,8 +44,8 @@ melt(tc) #makes the column values organized by a single column named variable
 
 #rename the "melted" data as "tcl" [t]ime [c]ourse [l]ong format
 tcl <- melt(tc, id.vars = c("day"),
-            variable.name = "parameter", 
-            value.name = "value")
+variable.name = "parameter", 
+value.name = "value")
 
 
 #check if the data tcl is correct
@@ -55,25 +60,39 @@ tclc
 #Check that the blank values no longer include "NA"
 summary(tclc)
 head(tclc)
-
+tail(tclc)
 #Check how R interprets the columns in the data
 #Sometimes you have your data in a particular order but R will organize them in alaphabetical order
 str(tclc)
 
+#************************************FOR LINE GRAPHS***************
+l_data <- ddply(tclc, c("day","parameter"), summarise,
+                N    = length(value),
+                mean = mean(value),
+                sd   = sd(value),
+                se   = sd / sqrt(N))
 
+
+
+
+# ***********************************FOR BAR GRAPHS***************
 # Make day column as factor
 # This effectlively tells R to treat your data as it and DON'T alphabetize it
 # You tell R which column you want it to read as a factor (leave it in the order that you entered the data)
-tclc$day <- factor(tclc$day, levels=c("0","5.5","10.5","14.5","17.5","1.p"))  #Adjust the day column and make it in the correct order
+b_tclc <- tclc
+b_tclc$day <- factor(b_tclc$day, levels=c("0","5","10","14","17","19"))  #Adjust the day column and make it in the correct order
 
 ## Test to see if parameter needs to be factored uniquely*****
-tclc$parameter <- factor(tclc$parameter, levels=unique(tclc$parameter))
+b_tclc$parameter <- factor(tclc$parameter, levels=unique(tclc$parameter))
 
 #Verify the factor is in the correct order
-str(tclc)
+str(b_tclc)
 
+
+# Make the bar graph data easy to recall by renaming it "b"
+b <- b_tclc
 #Summarize the data
-tc_data <- ddply(tclc, c("day","parameter"), summarise,
+b_data <- ddply(b, c("day","parameter"), summarise,
                  N    = length(value),
                  mean = mean(value),
                  sd   = sd(value),
@@ -81,10 +100,10 @@ tc_data <- ddply(tclc, c("day","parameter"), summarise,
 
 
 #check if data is truly summarized
-tc_data
+b_data
 
 #Plot all the data
-tc_plot <- ggplot(tc_data, aes(x=day, y=mean, fill=parameter)) +
+tc_plot <- ggplot(b_data, aes(x=day, y=mean, fill=parameter)) +
   geom_bar(position=position_dodge(), stat="identity") +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 width=.25,                    # Width of the error bars
@@ -92,21 +111,24 @@ tc_plot <- ggplot(tc_data, aes(x=day, y=mean, fill=parameter)) +
   xlab("Day of Gestation") +  # X axis label
   ylab("Mouse parameter (in g or #)") +  # Y axis label
   ## OPTIONAL ##scale_fill_hue(name="", breaks=c(""), labels=c("")) + 
-  ggtitle("Changes within mouse during pregnancy") + scale_y_continuous(expand=c(0,0)) # Plot title
+  ggtitle("") + scale_y_continuous(expand=c(0,0)) # Plot title
 
 
 # Check if plot worked
 tc_plot
 
-#fix axes
-tc_plot_final <- tc_plot +theme(axis.line.x=element_line(color="black",size=1.0),    #Make X axis size 1.0 and black
-                                axis.line.y=element_line(color="black",size=1.0),     #Make Y axis size 1.0 and black
-                                panel.background=element_rect(fill=NA,size=rel(20)), #Remove grey background
-                                panel.grid.minor=element_line(colour=NA),            #Remove grid lines
-                                axis.text=element_text(size=18,colour="black"),      #Make axis text black and size 18
-                                axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=20), # Make Title axis bold and size 20
-                                plot.title = element_text(face="bold", size=30))     #Make plot title bold and size 30
 
+#Make a default theme for optimizeing graph aesthetics
+publication_style <- theme(axis.line.x=element_line(color="black",size=1.0),    #Make X axis size 1.0 and black
+      axis.line.y=element_line(color="black",size=1.0),     #Make Y axis size 1.0 and black
+      panel.background=element_rect(fill=NA,size=rel(20)), #Remove grey background
+      panel.grid.minor=element_line(colour=NA),            #Remove grid lines
+      axis.text=element_text(size=18,colour="black"),      #Make axis text black and size 18
+      axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=20), # Make Title axis bold and size 20
+      plot.title = element_text(face="bold", size=30))     #Make plot title bold and size 30
+
+#fix axes
+tc_plot_final <- tc_plot + publication_style
 
 #Check the final plot
 tc_plot_final
@@ -115,20 +137,20 @@ tc_plot_final
 
 #Save as very high quality PNG @ 300dpi
 #good for publications
-png("~/Desktop/R_Folder/tc_hi_res_300.png", width = 14, height = 10, units = 'in', res = 300)
+png("~/Desktop/R_Folder/tc_hi_res.png", width = 7, height = 5, units = 'in', res = 600)
 tc_plot_final
 dev.off()
 
 ########################################################################
 
 #Filter weight
-tc_weight_data <- tc_data[tc_data$parameter %in% c("weight"),]
+weight_data <- b_data[b_data$parameter %in% c("weight"),]
 
-summary(tc_data)
-summary(tc_weight_data)
+summary(b_data)
+summary(weight_data)
 
 #plot weight data
-weight_plot <- ggplot(tc_weight_data, aes(x=day, y=mean, fill=parameter)) +
+weight_plot <- ggplot(weight_data, aes(x=day, y=mean, fill=parameter)) +
   geom_bar(position=position_dodge(), stat="identity") +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 width=.25,                    # Width of the error bars
@@ -136,42 +158,72 @@ weight_plot <- ggplot(tc_weight_data, aes(x=day, y=mean, fill=parameter)) +
   xlab("Day of Gestation") +  # X axis label
   ylab("Mean Weight (g)") +  # Y axis label
   scale_fill_hue(name="", breaks=c(""), labels=c("")) + 
-  ggtitle("Weight of Mice During Pregnancy") + scale_y_continuous(expand=c(0,0)) # Plot title
+  ggtitle("") + scale_y_continuous(expand=c(0,0)) # Plot title
 
 #Check if weight plot worked
 weight_plot
 
-#fix axes
-tc_weight_final <- weight_plot +theme(axis.line.x=element_line(color="black",size=1.0),    #Make X axis size 1.0 and black
-                                      axis.line.y=element_line(color="black",size=1.0),     #Make Y axis size 1.0 and black
-                                      panel.background=element_rect(fill=NA,size=rel(20)), #Remove grey background
-                                      panel.grid.minor=element_line(colour=NA),            #Remove grid lines
-                                      axis.text=element_text(size=18,colour="black"),      #Make axis text black and size 18
-                                      axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=20), # Make Title axis bold and size 20
-                                      plot.title = element_text(face="bold", size=30))     #Make plot title bold and size 30
-
+#fix axes (using publication style)
+tc_weight_final <- weight_plot + publication_style
 
 #Check the final plot
 tc_weight_final
 
 #Save as very high quality PNG @ 300dpi
 #good for publications
-png("~/Desktop/R_Folder/tc_Weight_hi_res_300.png", width = 14, height = 10, units = 'in', res = 300)
+png("~/Desktop/R_Folder/tc_Weight_hi_res.png", width = 7, height = 5, units = 'in', res = 600)
 tc_weight_final
 dev.off()
+
+######################################
+#Test for line graph generation ######
+
+l_weight_data <- l_data[l_data$parameter %in% c("weight"),]
+
+weight_plot_line <- ggplot(l_weight_data, aes(x=day, y=mean,  group=1, colour=parameter)) +
+  geom_line(size=2, colour="black") + geom_point(size=3, colour="black") +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
+                width=.8,  # Width of the error bars
+                size=1.5,   # Size of the error bars
+                colour="black", #color of the error bars
+                position=position_dodge(.9)) +
+  theme(legend.position="none") + #remove legend
+  xlab("Day of Gestation") +  # X axis label
+  ylab("Mean Weight (g)") +  # Y axis label  
+  ggtitle("") + scale_y_continuous(expand=c(0,0)) # Plot title
+
+  
+#test is the line graph worked
+weight_plot_line
+
+#Format axes correctly using (publication_style)
+weight_plot_line + publication_style
+
+#Make finalize line graph 
+weight_line_final <- weight_plot_line + publication_style + scale_y_continuous(limits=c(15, 35)) #Adjust y axis
+
+#Check to see if it worked
+weight_line_final
+
+#Save as very high quality PNG @ 300dpi
+#good for publications
+png("~/Desktop/R_Folder/line_tc_Weight_hi_res.png", width = 7, height = 5, units = 'in', res = 600)
+weight_line_final
+dev.off()
+
 
 
 ###########################################################################
 
 
 #Filter pups
-tc_pup_data <- tc_data[tc_data$parameter %in% c("pups"),]
+pup_data <- b_data[b_data$parameter %in% c("pups"),]
 
-summary(tc_data)
-summary(tc_pup_data)
+summary(b_data)
+summary(pup_data)
 
 #plot weight data
-pup_plot <- ggplot(tc_pup_data, aes(x=day, y=mean, fill=parameter)) +
+pup_plot <- ggplot(pup_data, aes(x=day, y=mean, fill=parameter)) +
   geom_bar(position=position_dodge(), stat="identity") +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 width=.25,                    # Width of the error bars
@@ -179,27 +231,20 @@ pup_plot <- ggplot(tc_pup_data, aes(x=day, y=mean, fill=parameter)) +
   xlab("Days of Gestation") +  # X axis label
   ylab("Number of Pups") +  # Y axis label
   scale_fill_hue(name="", breaks=c(""), labels=c("")) + 
-  ggtitle("Number of Mouse Pups During Pregnancy") + scale_y_continuous(expand=c(0,0)) # Plot title
+  ggtitle("") + scale_y_continuous(expand=c(0,0)) # Plot title
 
 #Check if weight plot worked
 pup_plot
 
 #fix axes
-tc_pup_final <- pup_plot +theme(axis.line.x=element_line(color="black",size=1.0),    #Make X axis size 1.0 and black
-                                axis.line.y=element_line(color="black",size=1.0),     #Make Y axis size 1.0 and black
-                                panel.background=element_rect(fill=NA,size=rel(20)), #Remove grey background
-                                panel.grid.minor=element_line(colour=NA),            #Remove grid lines
-                                axis.text=element_text(size=18,colour="black"),      #Make axis text black and size 18
-                                axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=20), # Make Title axis bold and size 20
-                                plot.title = element_text(face="bold", size=30))     #Make plot title bold and size 30
-
+tc_pup_final <- pup_plot + publication_style
 
 #Check the final plot
 tc_pup_final
 
 #Save as very high quality PNG @ 300dpi
 #good for publications
-png("~/Desktop/R_Folder/tc_pup_hi_res_300.png", width = 14, height = 10, units = 'in', res = 300)
+png("~/Desktop/R_Folder/tc_pup_hi_res.png", width = 7, height = 5, units = 'in', res = 600)
 tc_pup_final
 dev.off()
 
@@ -207,16 +252,14 @@ dev.off()
 ########################################################################################
 
 #Calculation of Pup Implantation Within Uterine Horns
-tc_horn_data <- tc_data[tc_data$parameter %in% c("left.horn","right.horn"),]
-
-summary(tc_data)
+horn_data <- b_data[b_data$parameter %in% c("left.horn","right.horn"),]
 
 #Check if horn data works
-summary(tc_horn_data)
-head(tc_horn_data)
+summary(horn_data)
+head(horn_data)
 
 #plot weight data
-horn_plot <- ggplot(tc_horn_data, aes(x=day, y=mean, fill=parameter)) +
+horn_plot <- ggplot(horn_data, aes(x=day, y=mean, fill=parameter)) +
   geom_bar(position=position_dodge(), stat="identity") +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 width=.25,                    # Width of the error bars
@@ -224,27 +267,20 @@ horn_plot <- ggplot(tc_horn_data, aes(x=day, y=mean, fill=parameter)) +
   xlab("Implantation Sites") +  # X axis label
   ylab("Number of Pups") +  # Y axis label
   #scale_fill_hue(name="Uterine Horn", breaks=c("Left Horn", "Right Horn"), labels=c("Left Horn", "Right Horn")) + 
-  ggtitle("Uterine Horn Implantation Distribution") + scale_y_continuous(expand=c(0,0)) # Plot title
+  ggtitle("") + scale_y_continuous(expand=c(0,0)) # Plot title
 
 #Check if weight plot worked
 horn_plot
 
 #fix axes
-tc_horn_final <- horn_plot +theme(axis.line.x=element_line(color="black",size=1.0),    #Make X axis size 1.0 and black
-                                  axis.line.y=element_line(color="black",size=1.0),     #Make Y axis size 1.0 and black
-                                  panel.background=element_rect(fill=NA,size=rel(20)), #Remove grey background
-                                  panel.grid.minor=element_line(colour=NA),            #Remove grid lines
-                                  axis.text=element_text(size=18,colour="black"),      #Make axis text black and size 18
-                                  axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=20), # Make Title axis bold and size 20
-                                  plot.title = element_text(face="bold", size=30))     #Make plot title bold and size 30
-
+tc_horn_final <- horn_plot + publication_style
 
 #Check the final plot
 tc_horn_final
 
 #Save as very high quality PNG @ 300dpi
 #good for publications
-png("~/Desktop/R_Folder/tc_horn_hi_res_300.png", width = 14, height = 10, units = 'in', res = 300)
+png("~/Desktop/R_Folder/tc_horn_hi_res.png", width = 7, height = 5, units = 'in', res = 600)
 tc_horn_final
 dev.off()
 
@@ -254,14 +290,14 @@ dev.off()
 #Calculation of mean placenta weight throughout gestation
 
 #Calculation of Pup Implantation Within Uterine Horns
-tc_plac_data <- tc_data[tc_data$parameter %in% c("placenta.1","placenta.2","placenta.3"),]
+plac_data <- b_data[b_data$parameter %in% c("placenta.1","placenta.2","placenta.3"),]
 
 #Check if placenta data works
-summary(tc_plac_data)
-head(tc_plac_data)
+summary(b_data)
+head(plac_data)
 
 #plot placenta weight data
-plac_plot <- ggplot(tc_plac_data, aes(x=day, y=mean, fill=parameter)) +
+plac_plot <- ggplot(plac_data, aes(x=day, y=mean, fill=parameter)) +
   geom_bar(position=position_dodge(), stat="identity") +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 width=.25,                    # Width of the error bars
@@ -269,28 +305,22 @@ plac_plot <- ggplot(tc_plac_data, aes(x=day, y=mean, fill=parameter)) +
   xlab("Day of Gestation") +  # X axis label
   ylab("Mean Placenta Weight (g)") +  # Y axis label
   #scale_fill_hue(name="", breaks=c("", ""), labels=c("","")) + 
-  ggtitle("Individual Placenta Weight Averages From Mice") + scale_y_continuous(expand=c(0,0)) # Plot title
+  ggtitle("") + scale_y_continuous(expand=c(0,0)) # Plot title
+
 
 #Check if weight plot worked
 plac_plot
 
 #fix axes
-tc_plac_final <- plac_plot +theme(axis.line.x=element_line(color="black",size=1.0),    #Make X axis size 1.0 and black
-                                  axis.line.y=element_line(color="black",size=1.0),     #Make Y axis size 1.0 and black
-                                  panel.background=element_rect(fill=NA,size=rel(20)), #Remove grey background
-                                  panel.grid.minor=element_line(colour=NA),            #Remove grid lines
-                                  axis.text=element_text(size=18,colour="black"),      #Make axis text black and size 18
-                                  axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=20), # Make Title axis bold and size 20
-                                  plot.title = element_text(face="bold", size=30))     #Make plot title bold and size 30
-
+plac_final <- plac_plot + publication_style
 
 #Check the final plot
-tc_plac_final
+plac_final
 
 #Save as very high quality PNG @ 300dpi
 #good for publications
-png("~/Desktop/R_Folder/tc_plac_hi_res_300.png", width = 14, height = 10, units = 'in', res = 300)
-tc_plac_final
+png("~/Desktop/R_Folder/tc_plac_hi_res.png", width = 7, height = 5, units = 'in', res = 600)
+plac_final
 dev.off()
 
 ##########################################################################################
@@ -298,14 +328,14 @@ dev.off()
 #Calculation of finalized mean placenta weight throughout gestation
 
 #Calculation of Pup Implantation Within Uterine Horns
-tc_mean_plac_data <- tc_data[tc_data$parameter %in% c("plac.avg"),]
+mean_plac_data <- b_data[b_data$parameter %in% c("plac.avg"),]
 
 #Check if placenta data works
-summary(tc_mean_plac_data)
-head(tc_mean_plac_data)
+summary(mean_plac_data)
+head(mean_plac_data)
 
 #plot placenta weight data
-mean_plac_plot <- ggplot(tc_mean_plac_data, aes(x=day, y=mean, fill=parameter)) +
+mean_plac_plot <- ggplot(mean_plac_data, aes(x=day, y=mean, fill=parameter)) +
   geom_bar(position=position_dodge(), stat="identity") +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se),
                 width=.25,                    # Width of the error bars
@@ -313,117 +343,22 @@ mean_plac_plot <- ggplot(tc_mean_plac_data, aes(x=day, y=mean, fill=parameter)) 
   xlab("Day of Gestation") +  # X axis label
   ylab("Mean Placenta Weight (g)") +  # Y axis label
   scale_fill_hue(name="", breaks=c("", ""), labels=c("","")) + 
-  ggtitle("Mean Placenta Weight") + scale_y_continuous(expand=c(0,0)) # Plot title
+  ggtitle("") + scale_y_continuous(expand=c(0,0)) # Plot title
 
 #Check if weight plot worked
 mean_plac_plot
 
 #fix axes
-tc_mean_plac_final <- mean_plac_plot +theme(axis.line.x=element_line(color="black",size=1.0),    #Make X axis size 1.0 and black
-                                            axis.line.y=element_line(color="black",size=1.0),     #Make Y axis size 1.0 and black
-                                            panel.background=element_rect(fill=NA,size=rel(20)), #Remove grey background
-                                            panel.grid.minor=element_line(colour=NA),            #Remove grid lines
-                                            axis.text=element_text(size=18,colour="black"),      #Make axis text black and size 18
-                                            axis.title=element_text(size=20,face="bold"),legend.text=element_text(size=20), # Make Title axis bold and size 20
-                                            plot.title = element_text(face="bold", size=30))     #Make plot title bold and size 30
-
+mean_plac_final <- mean_plac_plot + publication_style
 
 #Check the final plot
-tc_mean_plac_final
+mean_plac_final
 
 #Save as very high quality PNG @ 300dpi
 #good for publications
-png("~/Desktop/R_Folder/tc_mean_plac_hi_res_300.png", width = 14, height = 10, units = 'in', res = 300)
-tc_mean_plac_final
+png("~/Desktop/R_Folder/tc_mean_plac_hi_res.png", width = 7, height = 5, units = 'in', res = 600)
+mean_plac_final
 dev.off()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##########################################################################################
-
-#Do not use.
-
-#Plot data for mean placenta weight
-summary(tc_plac_data)
-head(tc_plac_data)
-
-
-
-#Determine mean from placenta.1, placenta.2 placenta.3 
-tc_plac_data$true.mean <- ddply(tc_plac_data, c("day","parameter"), summarise,
-                                N    = length(mean),
-                                mean = mean(mean),
-                                sd   = sd(mean),
-                                se   = sd / sqrt(N))
-
-tc_plac_data$true.mean
-
-
-
-
-
-
-
-
-
-
-
-
-
-###################################################################################################################
-
-#Do not use yet.
-t_c$weight <- factor(t_c$weight, levels=unique(t_c$weight))
-t_c$pup <- factor(t_c$pup, levels=unique(t_c$pup))
-t_c$left.horn <- factor(t_c$left.horn, levels=unique(t_c$left.horn))
-t_c$right.horn <- factor(t_c$right.horn, levels=unique(t_c$right.horn))
-t_c$resorption.sites <- factor(t_c$resorption.sites, levels=unique(t_c$resorption.sites))
-
-#Check that is does change it
-str(t_c)
-
-#Make a new column names "plac.mean" with placenta weight average
-t_c$plac.mean <- ave(t_c$placenta.1,t_c$placenta.2,t_c$placenta.3, FUN = mean)
-
-#Check to make sure the column was made
-summary(t_c)
-
-
-#Omit NAs in data, (if there's no value for placenta IE virigin females then R will ignore them)
-t_c <- na.omit(t_c)
-
-summary(t_c)
-
-head(t_c)
-
-
-
-
-
-
-
 
 
 
@@ -432,5 +367,5 @@ head(t_c)
 
 # Experimental section
 #annotate
-group1_final_plot + annotate("text", x = 4, y = 25, label = "Some text")
+##annotate("text", x = 4, y = 25, label = "Some text")
 
