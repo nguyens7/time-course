@@ -1,0 +1,205 @@
+---
+title: "Analyzing Nanosight Data"
+author: "Sean Nguyen"
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+  word_document: default
+---
+
+
+#Introduction to Using R
+R is an incredibly powerful statistical programming language that allows you to process and analyze lots of data and to organize it and process it efficiently and to generate beautiful publication ready figures.  The best part of all this is that it is free and all the work that you do will theoretically be 100% reproducible.
+&nbsp;
+```{r  load_packages, include=FALSE}
+library(tidyverse)
+library(cowplot)
+```
+
+
+
+#Importing your data
+This section will demonstrate how to get started with analyzing data using R.
+
+**You will first want to tell R where to find all of your files, you can do this with the "setwd" command**  
+- This is where R will read in all of your files and output your data that you generate(plots, CSVs, etc)  
+
+**You can abbreviate long filenames by calling it an object, in this case we can make our long csv = "my data"**  
+- This way you can just use "mydata" and it will automatically insert the filename  
+
+**Next we will want to import the csv into r and we can accomplish this with the "read_csv" function**  
+- This will import our csv file and we can make this an object known as "data"  
+- Anytime we want to see the dataframe we can simply run "data"
+
+```{r}
+setwd("~/NanoVideos/2017-02-07/")
+
+mydata <- "virgin_combined-ExperimentSummary.csv"
+
+data <- read_csv(mydata)
+
+```
+
+&nbsp;
+We can quickly look at the dimensions of the dataframe with **dim()**
+&nbsp;
+```{r}
+dim(data)
+```
+
+&nbsp;
+We can see the top of the dataframe with **head()**
+&nbsp;
+```{r}
+head(data)
+```
+
+&nbsp;
+You can also look at the bottom with **tail()**
+&nbsp;
+
+```{r}
+tail(data)
+```
+
+#Convert data from wide type to long
+```{r}
+data1 <- data %>%
+  gather(Sample,Count,2:10 )
+data1
+```
+
+#Separate samples by identifiers 
+
+```{r}
+data2 <- data1 %>% 
+  separate(Sample, into=c("Sample_type","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
+  select(-`_`)
+data2
+```
+
+#Data types
+R works with a variety of different data structures including, strings, vectors, factors, lists, integers, numerics and characters.   
+What I found that works for me is to think of factors and categorical variables.
+
+We can inspect the structure of the data type
+```{r}
+str(data2)
+```
+&nbsp;
+&nbsp;
+
+#Fixing data types
+We can fix the data types to make things a factor (typically categorical variables) or numeric for numbers
+The typical way to reformat data types is to call the data and specify the column name using **dataframe_name$column_name**  
+Next you need to assign the column name **as.factor()** or **as.numeric()**, be sure to make sure the column is specified  
+Then you will want to make **as.factor()** or **as.numeric()** equal to the column that you are changing 
+&nbsp;
+```{r}
+data2$Sample_type <- as.factor(data2$Sample_type)
+data2$Dilution_factor <- as.numeric(data2$Dilution_factor)
+data2$Injection<- as.factor(data2$Injection)
+data2$Tech_rep <- as.numeric(data2$Tech_rep)
+```
+&nbsp;
+&nbsp;
+Afterwards, be sure to check the data structure to make sure you did things correctly using the **str()**
+```{r}
+str(data2)
+```
+&nbsp;
+We can use **group_by()** to effectively 'lock' in certain variables/factors within a particular column.  In our case we will use group_by to 'lock' the particle_size, dilution factor and injection columns.  
+&nbsp;
+Next we can use  **summarise()** to calculate the  number of rows within a certain group, calculate the average, standard deviation and standard error of the mean.
+&nbsp;
+```{r}
+data3 <- data2 %>% 
+  group_by(particle_size,Sample_type,Dilution_factor,Injection) %>% 
+  summarise( tech_N = length(Count),
+             tech_mean = mean(Count),
+             tech_sd = sd(Count),
+             tech_se = tech_sd/sqrt(tech_N))
+data3
+```
+&nbsp;  
+We can repeat **summarise()** again but on data3  to summarize the three readings to get one central reading  
+We can make this new summarization = data4
+&nbsp;
+```{r}
+data4 <- data3 %>% 
+  group_by(particle_size,Sample_type,Dilution_factor) %>% 
+  summarise( inj_N = length(tech_mean),
+             inj_mean = mean(tech_mean),
+             inj_sd = sd(tech_mean),
+             inj_se = inj_sd/sqrt(inj_N))
+data4
+```
+&nbsp;
+#Graphing data
+Now that the data is structured properly we can graph the data to get an idea of what is going on.  
+We will use the **ggplot()**
+&nbsp;  
+```{r warning=FALSE}
+graph1 <- data3 %>%
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se, ymax=tech_mean+tech_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=2.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_grid(. ~ Injection)
+graph1
+```
+
+&nbsp;
+Next we can graph **data4** 
+&nbsp; 
+
+```{r warning=FALSE}
+graph2 <- data4 %>% 
+  ggplot(aes(x=particle_size, y=inj_mean,color=Sample_type ))+ #plot
+  geom_ribbon(aes(ymin=inj_mean-inj_se, ymax=inj_mean+inj_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Condition") #Label table title
+graph2
+
+```
+
+&nbsp;
+Next we can create a publication Quality figure by combining both graph1 and graph2 using the  **plot_grid()** function from the cowplot library.
+&nbsp; 
+
+```{r warning=FALSE}
+plot_grid(graph1,graph2, labels = c("Individual\nInjections","Averaged"),nrow = 2, align = "v")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
