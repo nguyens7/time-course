@@ -24,7 +24,7 @@ std1 <- std %>%
   gather(Sample,Count,2:70)
 
 std2 <- std1 %>% 
-  separate(Sample, into=c("Sample_ID","When","Dilution_factor","Nano_day","Injection", sep = "_")) %>% 
+  separate(Sample, into=c("Sample_ID","When","Dilution_factor","Nano_day","Injection","Tech_Rep", sep = "_")) %>% 
   select(-`_`)
 
 str(std2)
@@ -40,7 +40,7 @@ std2 <- std2 %>%
   mutate(True_Count=Dilution_factor*Count)
 
 std2$Nano_day <-  factor(std2$Nano_day, levels=c('1','2','3','4','5','6'))
-std2$When <- factor(std2$When, levels=c('Before','After'))
+std2$When <- factor(std2$When, levels=c('before','after'))
 
 #Summarize the 3 technical reps
 std3 <- std2 %>% 
