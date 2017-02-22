@@ -10,7 +10,7 @@ library(broom)
 library(pwr)
 
 setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/")
-setwd("\Users\NanoSight\Documents\GitHub\time-course")
+setwd("~/GitHub/time-course")
 
 standards <- "standards_MASTER-ExperimentSummary.csv" 
 rawdata <- "MASTER-ExperimentSummary.csv"
@@ -53,13 +53,41 @@ std3
 
 #Summarize samples by injection
 std4 <- std3 %>% 
-  group_by(particle_size,Sample_ID,When,Dilution_factor,Nano_day) %>% 
+  group_by(Nano_day,When,particle_size) %>% 
   summarise( inj_N = length(tech_mean),
              inj_mean = mean(tech_mean),
              inj_sd = sd(tech_mean),
              inj_se = inj_sd/sqrt(inj_N))
 std4
 
+
+
+##TROUBLESHOOTING###
+filter(!Nano_day=="2",!When=="after")
+
+test <- std2 %>% 
+  group_by(particle_size,Sample_ID,When,Dilution_factor,Nano_day,Injection) %>%
+  filter(!Nano_day=="2"|!When=="before") %>% 
+  summarise( tech_N = length(True_Count),
+             tech_mean = mean(True_Count),
+             tech_sd = sd(True_Count),
+             tech_se = tech_sd/sqrt(tech_N))
+
+test %>%
+  ggplot(aes(x=particle_size, y=tech_mean,color=When ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se, ymax=tech_mean+tech_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,300)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap(When ~ Nano_day,nrow=1)
+
+
+
+
+########################
 
 #Counting
 count <- std2 %>% 
