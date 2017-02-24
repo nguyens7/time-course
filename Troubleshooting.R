@@ -212,11 +212,12 @@ HSD <- TukeyHSD(fit)
 
 tukey <- tidy(HSD)
 
-power <- pwr.anova.test(k = 6 , n = , f = 0.9, sig.level =.05 , power =0.8 )
+power <- pwr.anova.test(k = 6 , n =  , f = 1, sig.level =.05 , power =0.8  )
 
 tidy(power)
 
 pwr.anova.test(k = 6 , n =6 , f = 0.8, sig.level =.05 , power =)
+
 
 
 
@@ -325,7 +326,7 @@ tukey2 <- tidy(HSD2)
 merge4 %>% 
   ggplot(aes(factor(Day),particle_conc, color=Day)) +
   geom_boxplot(colour="black",fill=NA) + 
-  geom_point(position='jitter',size=2)+
+  geom_point(position='jitter',size=3)+
   xlab("\nDay of Gestation\n") + # X axis label
   ylab("\nExosomes/ml\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
@@ -334,3 +335,6 @@ merge4 %>%
 tukey2 %>% 
   filter(adj.p.value<0.05) %>% 
   arrange(adj.p.value)
+
+normality <- shapiro.test(merge4$particle_conc)
+normal <- tidy(normality)
