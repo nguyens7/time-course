@@ -15,11 +15,16 @@ rawdata <- "MASTER-ExperimentSummary.csv"
 timecourse <- "timecourse2017.csv"
 day1rerun <- "Day1_second_attempt-ExperimentSummary.csv"
 day4rerun <- "Day4_reanalysis-ExperimentSummary.csv"
+rerun <- "samples_reanalysis.csv"
+std_rerun <- "std_reanalysis.csv"
 
 data <- read_csv(rawdata)
 tc <- read_csv(timecourse, na = c("","NA"))
 day1 <- read_csv(day1rerun)
 day4 <- read_csv(day4rerun)
+samples_rerun <- read_csv(rerun)
+stand_rerun <- read_csv(std_rerun)
+
 
 dim(data)
 dim(tc)
@@ -431,4 +436,96 @@ normality <- shapiro.test(merge4$particle_conc)
 normal <- tidy(normality)
 
 
+# Rerun samples -----------------------------------------------------------
+
+samples_rerun2 <- samples_rerun %>%
+  gather(Sample,Count,2:106)
+
+samples_rerun3 <- samples_rerun2 %>% 
+  separate(Sample, into=c("Sample_ID","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
+  select(-`_`)
+
+
+samples_rerun3$Sample_ID <- as.factor(samples_rerun3$Sample_ID)
+samples_rerun3$Dilution_factor <- as.numeric(samples_rerun3$Dilution_factor)
+samples_rerun3$Injection<- as.factor(samples_rerun3$Injection)
+samples_rerun3$Tech_rep <- as.numeric(samples_rerun3$Tech_rep)
+
+samples_rerun3 <- samples_rerun3 %>% 
+  mutate(True_Count=Dilution_factor*Count)
+
+samples_rerun4 <- samples_rerun3 %>% 
+  group_by(particle_size,Sample_ID,Dilution_factor,Injection) %>% 
+  summarise( tech_N = length(True_Count),
+             tech_mean = mean(True_Count),
+             tech_sd = sd(True_Count),
+             tech_se = tech_sd/sqrt(tech_N))
+
+merge_samples_rerun4 <- inner_join(tc1,samples_rerun4, by= "Sample_ID")
+
+#Summarize samples by injection
+
+samples_rerun5 <- samples_rerun4 %>% 
+  group_by(particle_size,Sample_ID,Dilution_factor) %>% 
+  summarise( inj_N = length(tech_mean),
+             inj_mean = mean(tech_mean),
+             inj_sd = sd(tech_mean),
+             inj_se = inj_sd/sqrt(inj_N))
+
+samples_rerun5
+
+merge_samples_rerun5 <- right_join(tc1,samples_rerun5, by= "Sample_ID")
+
+merge_samples_rerun6  <- merge_samples_rerun5  %>% 
+  filter(!Sample_ID == '12') %>% 
+  group_by(Day,Sample_ID,TEI_Day) %>% 
+  summarise(particle_conc=sum(inj_mean))
+
+merge_samples_rerun6
+
+merge_samples_rerun7 <- bind_rows(test4_1,merge_samples_rerun6)
+
+merge_samples_rerun7$Sample_ID <- as.factor(merge_samples_rerun7$Sample_ID)
+merge_samples_rerun7$Day <- as.factor(merge_samples_rerun7$Day)
+
+
+merge_samples_rerun7 %>%
+  filter(!Sample_ID %in% c('5','17','28')) %>% 
+  ggplot(aes(x=Day,y=particle_conc, color=Day)) +
+  geom_point(position='jitter',size=3)+
+  geom_boxplot(colour="black",fill=NA) + 
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+
+
+merge_samples_rerun8 <- merge_samples_rerun7 %>%
+  filter(!Sample_ID %in% c('5','17','28'))
+
+new <- aov(particle_conc ~ Day,data=merge_samples_rerun8)
+
+tidy(new)
+
+
+HSD2 <- TukeyHSD(new)
+tukey2 <- tidy(HSD2)
+
+
+merge4 %>% 
+  group_by(Day) %>% 
+  ggplot(aes(x=Day,y=particle_conc, color=Day)) +
+  geom_point(position='jitter',size=3)+
+  geom_boxplot(colour="black",fill=NA) + 
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+
+tukey2 %>% 
+  filter(adj.p.value<0.05) %>% 
+  arrange(adj.p.value)
+
+normality <- shapiro.test(merge4$particle_conc)
+normal <- tidy(normality)
 
