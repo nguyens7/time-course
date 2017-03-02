@@ -15,10 +15,12 @@ setwd("~/GitHub/time-course")
 standards <- "standards_MASTER-ExperimentSummary.csv" 
 rawdata <- "MASTER-ExperimentSummary.csv"
 timecourse <- "timecourse2017.csv"
+restandards <- "std_reanalysis.csv"
 
 data <- read_csv(rawdata)
 tc <- read_csv(timecourse, na = c("","NA"))
 std <- read_csv(standards)
+re_std <- read_csv(restandards)
 
 std1 <- std %>%
   gather(Sample,Count,2:70)
@@ -159,3 +161,10 @@ graph4 <- count1 %>%
   labs(color="Reading During\nExperiment") #Label table title
 
 ggsave("\Users\NanoSight\Documents\GitHub\time-course\Variation")
+
+
+?`pwr-package`
+
+pwr.anova.test(f= ,k=6, n=6, sig.level=0.05, power=0.8)
+
+

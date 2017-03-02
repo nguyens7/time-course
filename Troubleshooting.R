@@ -489,8 +489,8 @@ merge_samples_rerun7$Sample_ID <- as.factor(merge_samples_rerun7$Sample_ID)
 merge_samples_rerun7$Day <- as.factor(merge_samples_rerun7$Day)
 
 
-merge_samples_rerun7 %>%
-  filter(!Sample_ID %in% c('5','17','28')) %>% 
+rerun_plot <- merge_samples_rerun7 %>%
+  #filter(!Sample_ID %in% c('5','17','28')) %>% 
   ggplot(aes(x=Day,y=particle_conc, color=Day)) +
   geom_point(position='jitter',size=3)+
   geom_boxplot(colour="black",fill=NA) + 
@@ -499,13 +499,48 @@ merge_samples_rerun7 %>%
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="Condition")#Label table title
 
+png("~/Desktop/rerun_plot.png", width = 7, height = 5, units = 'in', res = 600)
+rerun_plot
+dev.off()
+
+rerun_plot2 <- merge_samples_rerun7 %>%
+  filter(!Sample_ID %in% c('5','17','28')) %>% 
+  ggplot(aes(x=Day,y=particle_conc, color=Day)) +
+  geom_point(position='jitter',size=3)+
+  geom_boxplot(colour="black",fill=NA) + 
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title 
+
+png("~/Desktop/rerun_plot2.png", width = 7, height = 5, units = 'in', res = 600)
+rerun_plot2
+dev.off()
+
+rerun_plot3 <- merge_samples_rerun7 %>%
+  filter(!Sample_ID %in% c('5','17','28','19','24')) %>% 
+  ggplot(aes(x=Day,y=particle_conc, color=Day)) +
+  geom_point(position='jitter',size=3)+
+  geom_boxplot(colour="black",fill=NA) + 
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+
+png("~/Desktop/rerun_plot3.png", width = 7, height = 5, units = 'in', res = 600)
+rerun_plot3
+dev.off()
 
 merge_samples_rerun8 <- merge_samples_rerun7 %>%
   filter(!Sample_ID %in% c('5','17','28'))
 
 new <- aov(particle_conc ~ Day,data=merge_samples_rerun8)
 
-tidy(new)
+aov <- tidy(new)
+
+write_csv(aov,"~/Desktop/ANOVA.csv")
+
+
 
 
 HSD2 <- TukeyHSD(new)
@@ -522,10 +557,14 @@ merge4 %>%
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="Condition")#Label table title
 
-tukey2 %>% 
+sig.tukey2 <- tukey2 %>% 
   filter(adj.p.value<0.05) %>% 
   arrange(adj.p.value)
 
-normality <- shapiro.test(merge4$particle_conc)
+write_csv(sig.tukey2,"~/Desktop/Tukey.csv")
+
+
+normality <- shapiro.test(merge_samples_rerun8$particle_conc)
 normal <- tidy(normality)
 
+write_csv(normal,"~/Desktop/shapiro.csv")
