@@ -7,6 +7,7 @@ graphics.off()
 library(tidyverse)
 library(cowplot)
 library(broom)
+library(ggvis)
 library(pwr)
 
 setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/")
@@ -163,7 +164,18 @@ graph4 <- count1 %>%
 ggsave("\Users\NanoSight\Documents\GitHub\time-course\Variation")
 
 
-?`pwr-package`
+
+
+# New analysis ------------------------------------------------------------
+
+std4 %>% 
+  filter(Nano_day == '1') %>% 
+  ggvis(~particle_size,~inj_mean) %>% 
+  layer_points(size := input_slider(100, 1000, value = 100)) %>% 
+  layer_lines() 
+
+# Power Analysis ----------------------------------------------------------
+
 
 pwr.anova.test(f= ,k=6, n=6, sig.level=0.05, power=0.8)
 
