@@ -9,7 +9,7 @@ library(broom)
 library(pwr)
 
 setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
-setwd("~/GitHub/time-course")
+setwd("~/GitHub/time-course/data")
 
 rawdata <- "MASTER-ExperimentSummary.csv"
 timecourse <- "timecourse2017.csv"
@@ -577,7 +577,7 @@ write_csv(normal,"~/Desktop/shapiro.csv")
 # Redo of day4 3_6_17 -----------------------------------------------------
 
 day4_1 <- day4_V2 %>%
-  gather(Sample,Count,2:37)
+  gather(Sample,Count,2:67)
 
 day4_2 <- day4_1 %>% 
   separate(Sample, into=c("Sample_ID","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
@@ -627,7 +627,7 @@ merge4_V2$Day <- as.factor(merge4_V2$Day)
 
 merge4_V2
 
-new <- aov(particle_conc ~ Day,data=merge4)
+new <- aov(particle_conc ~ Day,data=merge4_V2)
 
 tidy(new)
 
@@ -637,7 +637,8 @@ tukey2 <- tidy(HSD2)
 
 str(merge4)
 
-merge4_V2 %>% 
+boxplot <- merge4_V2 %>% 
+  #filter(!TEI_Day %in% c('5','4')) %>% 
   group_by(Day) %>% 
   ggplot(aes(x=Day,y=particle_conc, color=Day)) +
   geom_point(position='jitter',size=3)+
@@ -646,6 +647,13 @@ merge4_V2 %>%
   ylab("\nExosomes/ml\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="Condition")#Label table title
+
+ggsave("Boxplot.png")
+
+merge4_V2 <- merge4_V2 %>% 
+  arrange(Day)
+
+write_csv(merge4_V2, "Reanalyzed_data.csv")
 
 tukey2 %>% 
   filter(adj.p.value<0.05) %>% 
@@ -656,7 +664,18 @@ normal <- tidy(normality)
 
   
   
+point_plot <- merge4_V2 %>% 
+  #filter(!TEI_Day %in% c('5','4')) %>% 
+  group_by(Day) %>% 
+  ggplot(aes(x=Day,y=particle_conc, color=Day,shape=TEI_Day)) +
+  geom_point(position='dodge',size=3)+
+  #geom_boxplot(colour="black",fill=NA) + 
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+
+ggsave("Pointplot.png")
   
   
-  
-  
+  IQR(merge4_V2$particle_conc)

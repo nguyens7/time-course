@@ -11,13 +11,13 @@ library(ggvis)
 library(pwr)
 
 setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
-setwd("~/GitHub/time-course")
+setwd("~/GitHub/time-course/data")
 
 standards <- "standards_MASTER-ExperimentSummary.csv" 
 rawdata <- "MASTER-ExperimentSummary.csv"
 timecourse <- "timecourse2017.csv"
 restandards <- "std_reanalysis.csv"
-V2standards <- "day4_std_reanalysis-ExperimentSummary.csv"
+V2standards <- "day4_V2_std_reanalysis-ExperimentSummary.csv"
 
 data <- read_csv(rawdata)
 tc <- read_csv(timecourse, na = c("","NA"))
@@ -240,7 +240,7 @@ pwr.anova.test(f= ,k=6, n=6, sig.level=0.05, power=0.8)
 
   
   re_std1 <- v2std %>% 
-  gather(Sample,Count,2:13)
+  gather(Sample,Count,2:37)
 
 re_std2 <- re_std1 %>% 
   separate(Sample, into=c("Sample_ID","When","Dilution_factor","Nano_day","Injection","Tech_Rep", sep = "_")) %>% 
@@ -280,7 +280,7 @@ re_std4 <- re_std3 %>%
 re_std4
 
 #plotting
-re_std4 %>% 
+redo_std <- re_std4 %>% 
   ggplot(aes(x=particle_size,y=inj_mean,color=When))+
   geom_ribbon(aes(ymin=inj_mean-inj_se, ymax=inj_mean+inj_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
   geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
@@ -291,7 +291,10 @@ re_std4 %>%
   labs(color="Condition")+ #Label table title
   facet_grid(When ~ Nano_day)
 
-re_std4 %>% 
+ggsave("Rerun_Standards_plot.png")
+
+redo_std_df <- re_std4 %>% 
   group_by(Nano_day,When) %>% 
   summarise(total=sum(inj_mean))
   
+write_csv(redo_std_df,"Rerun_standards.csv")
