@@ -8,7 +8,7 @@ library(cowplot)
 library(broom)
 library(pwr)
 
-setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/")
+setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
 setwd("~/GitHub/time-course")
 
 rawdata <- "MASTER-ExperimentSummary.csv"
@@ -17,6 +17,7 @@ day1rerun <- "Day1_second_attempt-ExperimentSummary.csv"
 day4rerun <- "Day4_reanalysis-ExperimentSummary.csv"
 rerun <- "samples_reanalysis.csv"
 std_rerun <- "std_reanalysis.csv"
+day4again <- "Day4_V2_reanalysis-ExperimentSummary.csv"
 
 data <- read_csv(rawdata)
 tc <- read_csv(timecourse, na = c("","NA"))
@@ -24,7 +25,7 @@ day1 <- read_csv(day1rerun)
 day4 <- read_csv(day4rerun)
 samples_rerun <- read_csv(rerun)
 stand_rerun <- read_csv(std_rerun)
-
+day4_V2 <- read_csv(day4again)
 
 dim(data)
 dim(tc)
@@ -331,6 +332,8 @@ merge4 <- bind_rows(test4_1,merge3)
 
 merge4$Sample_ID <- as.factor(merge4$Sample_ID)
 
+merge4
+
 new <- aov(particle_conc ~ Day,data=merge4)
 
 tidy(new)
@@ -568,3 +571,92 @@ normality <- shapiro.test(merge_samples_rerun8$particle_conc)
 normal <- tidy(normality)
 
 write_csv(normal,"~/Desktop/shapiro.csv")
+
+
+
+# Redo of day4 3_6_17 -----------------------------------------------------
+
+day4_1 <- day4_V2 %>%
+  gather(Sample,Count,2:37)
+
+day4_2 <- day4_1 %>% 
+  separate(Sample, into=c("Sample_ID","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
+  select(-`_`)
+
+day4_2$Sample_ID <- as.factor(day4_2$Sample_ID)
+day4_2$Dilution_factor <- as.numeric(day4_2$Dilution_factor)
+day4_2$Injection<- as.factor(day4_2$Injection)
+day4_2$Tech_rep <- as.numeric(day4_2$Tech_rep)
+
+day4_2 <- day4_2 %>% 
+  mutate(True_Count=Dilution_factor*Count)
+
+day4_3 <- day4_2 %>% 
+  group_by(particle_size,Sample_ID,Dilution_factor,Injection) %>% 
+  summarise( tech_N = length(True_Count),
+             tech_mean = mean(True_Count),
+             tech_sd = sd(True_Count),
+             tech_se = tech_sd/sqrt(tech_N))
+
+merge_day4_1 <- inner_join(tc1,day4_3, by= "Sample_ID")
+
+#Summarize samples by injection
+
+day4_4 <- day4_3 %>% 
+  group_by(particle_size,Sample_ID,Dilution_factor) %>% 
+  summarise( inj_N = length(tech_mean),
+             inj_mean = mean(tech_mean),
+             inj_sd = sd(tech_mean),
+             inj_se = inj_sd/sqrt(inj_N))
+
+day4_4
+
+merge_day4_2 <- right_join(tc1,day4_4, by= "Sample_ID")
+
+merge_day4_3 <- merge_day4_2 %>% 
+  #filter(!Sample_ID == '12') %>% 
+  group_by(Day,Sample_ID,TEI_Day) %>% 
+  summarise(particle_conc=sum(inj_mean))
+
+merge_day4_3
+
+merge4_V2 <- bind_rows(merge4,merge_day4_3)
+
+merge4_V2$Sample_ID <- as.factor(merge4_V2$Sample_ID)
+merge4_V2$Day <- as.factor(merge4_V2$Day)
+
+merge4_V2
+
+new <- aov(particle_conc ~ Day,data=merge4)
+
+tidy(new)
+
+HSD2 <- TukeyHSD(new)
+tukey2 <- tidy(HSD2)
+
+
+str(merge4)
+
+merge4_V2 %>% 
+  group_by(Day) %>% 
+  ggplot(aes(x=Day,y=particle_conc, color=Day)) +
+  geom_point(position='jitter',size=3)+
+  geom_boxplot(colour="black",fill=NA) + 
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+
+tukey2 %>% 
+  filter(adj.p.value<0.05) %>% 
+  arrange(adj.p.value)
+
+normality <- shapiro.test(merge4$particle_conc)
+normal <- tidy(normality)
+
+  
+  
+  
+  
+  
+  

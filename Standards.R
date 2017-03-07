@@ -10,18 +10,20 @@ library(broom)
 library(ggvis)
 library(pwr)
 
-setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/")
+setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
 setwd("~/GitHub/time-course")
 
 standards <- "standards_MASTER-ExperimentSummary.csv" 
 rawdata <- "MASTER-ExperimentSummary.csv"
 timecourse <- "timecourse2017.csv"
 restandards <- "std_reanalysis.csv"
+V2standards <- "day4_std_reanalysis-ExperimentSummary.csv"
 
 data <- read_csv(rawdata)
 tc <- read_csv(timecourse, na = c("","NA"))
 std <- read_csv(standards)
 re_std <- read_csv(restandards)
+v2std <- read_csv(V2standards)
 
 std1 <- std %>%
   gather(Sample,Count,2:70)
@@ -233,3 +235,63 @@ re_std4 %>%
 pwr.anova.test(f= ,k=6, n=6, sig.level=0.05, power=0.8)
 
 
+# 3_6_16 Day4 Reanalysis --------------------------------------------------
+
+
+  
+  re_std1 <- v2std %>% 
+  gather(Sample,Count,2:13)
+
+re_std2 <- re_std1 %>% 
+  separate(Sample, into=c("Sample_ID","When","Dilution_factor","Nano_day","Injection","Tech_Rep", sep = "_")) %>% 
+  select(-`_`)
+
+str(re_std2)
+re_std2$Sample_ID <- as.factor(re_std2$Sample_ID)
+re_std2$When <- as.factor(re_std2$When)
+re_std2$Dilution_factor <- as.numeric(re_std2$Dilution_factor)
+re_std2$Injection<- as.factor(re_std2$Injection)
+re_std2$Nano_day <- as.numeric(re_std2$Nano_day)
+str(re_std2)
+
+#Back-Calculate
+re_std2 <- re_std2 %>% 
+  mutate(True_Count=Dilution_factor*Count)
+
+re_std2$Nano_day <-  factor(re_std2$Nano_day, levels=c('1','2','3','4','5','6'))
+re_std2$When <- factor(re_std2$When, levels=c('before','after'))
+
+#Summarize the 3 technical reps
+re_std3 <- re_std2 %>% 
+  group_by(particle_size,Sample_ID,When,Dilution_factor,Nano_day,Injection) %>% 
+  summarise( tech_N = length(True_Count),
+             tech_mean = mean(True_Count),
+             tech_sd = sd(True_Count),
+             tech_se = tech_sd/sqrt(tech_N))
+re_std3
+
+#Summarize samples by injection
+re_std4 <- re_std3 %>% 
+  group_by(Nano_day,When,particle_size) %>% 
+  summarise( inj_N = length(tech_mean),
+             inj_mean = mean(tech_mean),
+             inj_sd = sd(tech_mean),
+             inj_se = inj_sd/sqrt(inj_N))
+re_std4
+
+#plotting
+re_std4 %>% 
+  ggplot(aes(x=particle_size,y=inj_mean,color=When))+
+  geom_ribbon(aes(ymin=inj_mean-inj_se, ymax=inj_mean+inj_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Condition")+ #Label table title
+  facet_grid(When ~ Nano_day)
+
+re_std4 %>% 
+  group_by(Nano_day,When) %>% 
+  summarise(total=sum(inj_mean))
+  
