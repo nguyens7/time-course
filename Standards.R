@@ -240,7 +240,7 @@ pwr.anova.test(f= ,k=6, n=6, sig.level=0.05, power=0.8)
 
   
   re_std1 <- v2std %>% 
-  gather(Sample,Count,2:37)
+  gather(Sample,Count,2:73)
 
 re_std2 <- re_std1 %>% 
   separate(Sample, into=c("Sample_ID","When","Dilution_factor","Nano_day","Injection","Tech_Rep", sep = "_")) %>% 

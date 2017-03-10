@@ -577,7 +577,7 @@ write_csv(normal,"~/Desktop/shapiro.csv")
 # Redo of day4 3_6_17 -----------------------------------------------------
 
 day4_1 <- day4_V2 %>%
-  gather(Sample,Count,2:67)
+  gather(Sample,Count,2:100)
 
 day4_2 <- day4_1 %>% 
   separate(Sample, into=c("Sample_ID","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
@@ -667,13 +667,16 @@ normal <- tidy(normality)
 point_plot <- merge4_V2 %>% 
   #filter(!TEI_Day %in% c('5','4')) %>% 
   group_by(Day) %>% 
-  ggplot(aes(x=Day,y=particle_conc, color=Day,shape=TEI_Day)) +
-  geom_point(position='dodge',size=3)+
+  ggplot(aes(x=Day,y=particle_conc, color=Day, shape=TEI_Day)) +
+  geom_point(size=3)+
+  scale_shape_manual(values=c(15,16,17,22,23,24))+
   #geom_boxplot(colour="black",fill=NA) + 
   xlab("\nDay of Gestation\n") + # X axis label
   ylab("\nExosomes/ml\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="Condition")#Label table title
+
+str(merge4_V2)
 
 ggsave("Pointplot.png")
   

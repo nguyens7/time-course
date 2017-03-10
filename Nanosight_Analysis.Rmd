@@ -1,0 +1,240 @@
+---
+title: "Nanosight Analysis"
+author: "Sean Nguyen"
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+#Overall Objective
+
+
+
+##Load Libraries
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(cowplot)
+library(broom)
+library(pwr)
+```
+
+##Import data
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+setwd("~/GitHub/time-course/data")
+
+rawdata <- "revised_MASTER-ExperimentSummary.csv"
+timecourse <- "timecourse2017.csv"
+
+
+data <- read_csv(rawdata)
+tc <- read_csv(timecourse, na = c("","NA"))
+```
+
+##Convert data from 'wide' to 'long' format
+```{r, message=FALSE, warning=FALSE}
+data1 <- data %>%
+  gather(Sample,Count,2:226)
+
+# Separate samples by identifiers 
+data2 <- data1 %>% 
+  separate(Sample, into=c("Sample_ID","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
+  select(-`_`)
+```
+
+##Factor the data into categorical variables
+
+```{r}
+# Refactoring Columns for samples
+data2$Sample_ID <- as.factor(data2$Sample_ID)
+data2$Dilution_factor <- as.numeric(data2$Dilution_factor)
+data2$Injection<- as.factor(data2$Injection)
+data2$Tech_rep <- as.numeric(data2$Tech_rep)
+
+
+# Refactoring COlumns for timecourse
+tc$Sample_ID <- as.factor(tc$Sample_ID)
+tc$Day <- as.factor(tc$Day)
+tc$Weight <- as.numeric(tc$Weight)
+tc$TEI_Day <- as.factor(tc$TEI_Day)
+```
+
+
+```{r}
+tc1 <- tc %>% 
+  select(Day:Pups)
+tc1
+```
+
+##Back calculate the original concentration of the sample
+```{r}
+data2 <- data2 %>% 
+  mutate(True_Count=Dilution_factor*Count)
+data2
+```
+
+## Average the three technical replicate readings
+```{r, message=TRUE, warning=FALSE}
+data3 <- data2 %>% 
+  group_by(particle_size,Sample_ID,Dilution_factor,Injection) %>% 
+  summarise( tech_N = length(True_Count),
+             tech_mean = mean(True_Count),
+             tech_sd = sd(True_Count),
+             tech_se = tech_sd/sqrt(tech_N))
+data3
+
+
+test1 <- left_join(tc1,data3, by= "Sample_ID")
+```
+
+
+##Summarize samples by injection (average both injections)
+```{r, warning=FALSE}
+
+data4 <- data3 %>% 
+  group_by(particle_size,Sample_ID,Dilution_factor) %>% 
+  summarise( inj_N = length(tech_mean),
+             inj_mean = mean(tech_mean),
+             inj_sd = sd(tech_mean),
+             inj_se = inj_sd/sqrt(inj_N))
+data4
+
+test2 <- left_join(tc1,data4, by= "Sample_ID")
+
+test2
+
+```
+
+#Quick visualizations
+
+### Graphing all samples
+```{r, warning=FALSE}
+test1$Sample_ID_correct = factor(test1$Sample_ID, levels=c('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36'))
+
+graph1 <- test1 %>%
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se, ymax=tech_mean+tech_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=2.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~ Sample_ID_correct, nrow=6)
+
+graph1
+```
+
+### Graphing averaged samples by experimental day
+```{r, warning=FALSE}
+graph2 <- test2 %>%
+  group_by(TEI_Day) %>% 
+  ggplot(aes(x=particle_size, y=inj_mean,color=Day ))+ #plot
+  #geom_ribbon(aes(ymin=inj_mean-inj_se, ymax=inj_mean+inj_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Condition")+ #Label table title
+  facet_wrap(~ TEI_Day, ncol=6)
+
+graph2
+```
+### Particle concentration values for each of the 36 samples
+```{r}
+test3 <- test2 %>% 
+  group_by(Day,Sample_ID) %>% 
+  summarise(particle_conc=sum(inj_mean))
+test3
+```
+### Summary statistics of particle concentration (averaging n=6 for each time point)
+```{r}
+test4 <- test3 %>% 
+  group_by(Day) %>% 
+  summarise(Day_N=length(particle_conc),
+            Day_mean = mean(particle_conc),
+            Day_sd = sd(particle_conc),
+            Day_se = Day_sd/sqrt(Day_N))
+```
+
+###Boxplot
+```{r, warning=FALSE}
+plot1 <- test3 %>% 
+  group_by(Day) %>% 
+  ggplot(aes(factor(Day),particle_conc, color=Day)) +
+  geom_boxplot(colour="black",fill=NA) + 
+  geom_point(position='jitter',size=3)+
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+plot1
+```
+
+###Bar plot
+```{r, warning=FALSE}
+plot <- test4 %>% 
+  ggplot(aes(x=Day, y=Day_mean, fill=Day ))+ #plot
+  geom_col()+
+  geom_errorbar(aes(ymin=Day_mean-Day_se, ymax=Day_mean+Day_se), width=.5, 
+                size=0.8, colour="black", position=position_dodge(.9)) + #error bars
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+plot
+```
+
+###Looking at Variation between the days the samples were run
+```{r, warning=FALSE}
+test7 <- test3 %>% 
+  left_join(tc1)
+
+plot2 <- test7 %>%
+  ggplot(aes(x = Day, y = particle_conc, color = Day, shape=TEI_Day))+
+  geom_point(position= 'dodge',size=4)+
+  scale_shape_manual(values=c(15,16,17,22,23,24))+
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+
+plot2
+
+```
+
+#Statistics
+
+
+###Shapiro test
+```{r}
+tidy(shapiro.test(test3$particle_conc))
+
+```
+p value >0.05 therefore conlude data is normally distributed
+
+###ANOVA
+```{r}
+fit <- aov(particle_conc ~ Day, data=test3)
+stats <- tidy(fit)
+stats
+```
+Statistically significant, thus Tukey's HSD post hoc analysis can determine significant differences.
+
+###Tukey Post Hoc Test
+```{r}
+HSD <- TukeyHSD(fit)
+tukey <- tidy(HSD)
+tukey
+```
+
+###Significant Tukey Post Hoc Test Values
+```{r}
+tukey %>%
+  filter(adj.p.value<0.05) %>% 
+  arrange(adj.p.value)
+```
+
+
