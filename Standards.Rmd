@@ -1,7 +1,10 @@
 ---
 title: "Standards Analysis"
 author: "Sean Nguyen"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document: default
 ---
 
 
@@ -11,18 +14,16 @@ library(cowplot)
 library(broom)
 ```
 
-###Set Working Directory
-```{r, message=FALSE, warning=FALSE}
-setwd("~/GitHub/time-course/data")
-```
 ###Import data
 ```{r}
+setwd("~/GitHub/time-course/data")
+
 V2standards <- "day4_V2_std_reanalysis-ExperimentSummary.csv"
 v2std <- read_csv(V2standards)
 v2std
 ```
 ###Convert data from 'wide' to 'long' format and factor columns to 'categorica' variables
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, include=FALSE}
  re_std1 <- v2std %>% 
   gather(Sample,Count,2:73)
 
@@ -132,7 +133,13 @@ Intra.assay_cv
 
 ###Inter assay variability
 ```{r}
-Intra.assay_cv %>% 
-  summarise(Exp_day= length())
+Inter.assay <- Intra.assay_cv %>% 
+ summarise(Exp_N = length(Day_mean),
+             Exp_mean = mean(Day_mean),
+             Exp_sd = sd(Day_mean),
+             Exp_se = Exp_sd/sqrt(Exp_N),
+            Exp_cv = Exp_sd/Exp_mean )
+Inter.assay
+
 ```
 
