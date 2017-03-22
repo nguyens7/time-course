@@ -2,9 +2,9 @@
 title: "Nanosight Analysis"
 author: "Sean Nguyen"
 output:
-  pdf_document: default
-  html_notebook: default
   html_document: default
+  html_notebook: default
+  pdf_document: default
 ---
 #Overall Objective
 
@@ -259,6 +259,81 @@ nano_100_data %>%
 
   
   
+
+```
+
+
+
+
+```{r}
+test8 <- test7 %>% 
+  filter(!Day == "20")
+
+mult_regression <- tidy(lm(particle_conc ~ Weight ,data = test8))
+
+mult_regression %>%
+  filter(p.value<0.05) %>% 
+  arrange(p.value)
+
+```
+
+```{r}
+test7 %>% 
+  ggplot(aes(x= Weight, y = particle_conc))+
+  geom_point()+
+  geom_smooth()+
+  xlab("\nWeight (g)\n") + # X axis label
+  ylab("Exosomes/ml\n") + # Y axis label
+  ggtitle("Linear Regression of Exosome Concentration\nvs. Weight") #title
+
+  
+```
+```{r}
+test7 %>% 
+  filter(!Sample_ID == '70') %>% 
+  ggplot(aes(x= Weight, y = particle_conc))+
+  geom_point(aes(color=factor(Day)))+
+  geom_smooth(method = "lm", level = 0.95)+
+  xlab("\nWeight (g)\n") + # X axis label
+  ylab("Exosomes/ml\n") + # Y axis label
+  ggtitle("Linear Regression of Exosome Concentration\nvs. Weight")+ #title
+  labs(color="Day")#Label table title
+
+```
+
+
+```{r}
+test7 %>% 
+  ggplot(aes(x= Pups, y = particle_conc))+
+  geom_point(aes(color=factor(Day)))+
+  geom_smooth(method = "lm", level = 0.95)+
+  
+  xlab("\nWeight (g)\n") + # X axis label
+  ylab("Exosomes/ml\n") + # Y axis label
+  ggtitle("Linear Regression of Exosome Concentration\nvs. Number of Pups")+ #title
+  labs(color="Day")#Label table title
+```
+
+```{r}
+mean_placenta <- tc %>% 
+  filter(Day %in% c('10','14','17') & !Sample_ID %in% c('70','73','74','75')) %>%
+  select(-(TEI_Day:Pup_right),-Resorp) %>% 
+  gather("Placenta_avg","Plac_weight", 3:5) %>%
+  group_by(Day,Sample_ID) %>% 
+  summarise(N = length(Plac_weight),
+            mean_plac = mean(Plac_weight*1000, na.rm = TRUE), #convert g to mg
+            sd = sd(Plac_weight)*1000,  #convert g to mg
+            se = sd/sqrt(N))
+
+mean_placenta %>% 
+  inner_join(test7) %>% 
+  ggplot(aes(x= mean_plac, y = particle_conc))+
+  geom_point(aes(color=factor(Day)))+
+  geom_smooth(method = "lm", level = 0.95)
+
+```
+
+```{r}
 
 ```
 
