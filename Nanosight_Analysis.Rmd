@@ -17,11 +17,13 @@ library(tidyverse)
 library(cowplot)
 library(broom)
 library(pwr)
+library(plotly)
 ```
 
 ##Import data
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-setwd("~/GitHub/time-course/data")
+#setwd("~/GitHub/time-course/data")
+setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
 
 rawdata <- "revised_MASTER-ExperimentSummary.csv"
 timecourse <- "timecourse2017.csv"
@@ -164,16 +166,32 @@ test4
 ###Boxplot
 ```{r, warning=FALSE}
 plot1 <- test3 %>% 
+  filter(!Sample_ID %in% c('6','28','32')) %>% 
   group_by(Day) %>% 
-  ggplot(aes(factor(Day),particle_conc, color=Day)) +
+  ggplot(aes(x= Day, y = particle_conc, color=Day)) +
   geom_boxplot(colour="black",fill=NA) + 
-  geom_point(position='jitter',size=3)+
+  geom_point(aes(text = paste("Sample ID:", Sample_ID)),
+             position='jitter',size=3)+
   xlab("\nDay of Gestation\n") + # X axis label
   ylab("\nExosomes/ml\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(color="Condition")#Label table title
+  labs(color="Condition")+ # Label table title
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_color_discrete(labels=c("Virgin","5","10","14","17","1 Day Post")) # Change Legend
+  
 plot1
+
+#ggsave("Exosome_plot.png", height = 5, width = 7, units = "in", dpi = 600)
+
 ```
+
+##Plotly
+```{r}
+  ggplotly(plot1)
+```
+
+
 
 ###Bar plot
 ```{r, warning=FALSE}
@@ -182,13 +200,20 @@ plot <- test4 %>%
   geom_col()+
   geom_errorbar(aes(ymin=Day_mean-Day_se, ymax=Day_mean+Day_se), width=.5, 
                 size=0.8, colour="black", position=position_dodge(.9)) + #error bars
-  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  scale_y_continuous(expand=c(0,0), breaks = seq(1E11,4E11,1E11))+ #set bottom of graph and scale
   xlab("\nDay of Gestation\n") + # X axis label
   ylab("\nExosomes/ml\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(color="Condition")#Label table title
+  labs(fill="Condition") + # Label table title
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_fill_discrete(labels=c("Virgin","5","10","14","17","1 Day Post"))
+
 plot
+
+ggsave("Exosome_barplot.png", height = 5, width = 7, units = "in", dpi = 600)
 ```
+
 
 ###Looking at Variation between the days the samples were run
 ```{r, warning=FALSE}
@@ -202,9 +227,43 @@ plot2 <- test7 %>%
   xlab("\nDay of Gestation\n") + # X axis label
   ylab("\nExosomes/ml\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(color="Condition")#Label table title
+  labs(color="Condition") + # Label table title
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_color_discrete(labels=c("Virgin","5","10","14","17","1 Day Post"))
 
 plot2
+
+```
+
+```{r}
+ggplotly(plot2)
+```
+
+#Looking at nanoparticle range
+```{r, message=FALSE, warning=FALSE}
+nano_100 <- data4 %>% 
+  filter(particle_size<140.5)
+
+nano_100_data <- left_join(tc1,nano_100, by= "Sample_ID")
+
+nano_100_data_plot <- nano_100_data %>%
+  group_by(Day,Sample_ID) %>% 
+  summarise(particle_conc=sum(inj_mean)) %>% 
+  filter(!Sample_ID %in% c('6','28','32')) %>% 
+  ggplot(aes(factor(Day),particle_conc, color=Day)) +
+  geom_boxplot(colour="black",fill=NA) + 
+  geom_point(position='jitter',size=3)+
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition") + # Label table title
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_color_discrete(labels=c("Virgin","5","10","14","17","1 Day Post"))
+
+nano_100_data_plot   
+  
 
 ```
 
@@ -220,7 +279,13 @@ p value >0.05 therefore conlude data is normally distributed
 
 ###ANOVA
 ```{r}
-fit <- aov(particle_conc ~ Day, data=test3)
+
+jacob <- nano_100_data %>%
+   group_by(Day,Sample_ID) %>% 
+  summarise(particle_conc=sum(inj_mean)) %>% 
+  filter(!Sample_ID %in% c('6','28','32'))
+         
+fit <- aov(particle_conc ~ Day, data=jacob)
 stats <- tidy(fit)
 stats
 ```
@@ -240,27 +305,7 @@ tukey %>%
   arrange(adj.p.value)
 ```
 
-#Looking at nanoparticle range
-```{r, message=FALSE, warning=FALSE}
-nano_100 <- data4 %>% 
-  filter(particle_size<120.5)
 
-nano_100_data <- left_join(tc1,nano_100, by= "Sample_ID")
-nano_100_data %>%
-   group_by(Day,Sample_ID) %>% 
-  summarise(particle_conc=sum(inj_mean)) %>% 
-  ggplot(aes(factor(Day),particle_conc, color=Day)) +
-  geom_boxplot(colour="black",fill=NA) + 
-  geom_point(position='jitter',size=3)+
-  xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
-  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(color="Condition")#Label table title
-
-  
-  
-
-```
 
 
 
@@ -269,11 +314,11 @@ nano_100_data %>%
 test8 <- test7 %>% 
   filter(!Day == "20")
 
-mult_regression <- tidy(lm(particle_conc ~ Weight ,data = test8))
+fit <- lm(particle_conc ~ Weight ,data = test8)
 
-mult_regression %>%
-  filter(p.value<0.05) %>% 
-  arrange(p.value)
+summary(fit)
+tidy(summary(fit))
+
 
 ```
 
@@ -284,7 +329,8 @@ test7 %>%
   geom_smooth()+
   xlab("\nWeight (g)\n") + # X axis label
   ylab("Exosomes/ml\n") + # Y axis label
-  ggtitle("Linear Regression of Exosome Concentration\nvs. Weight") #title
+  ggtitle("Linear Regression of Exosome \nConcentration vs. Weight")+ #title
+  labs(color="Day")#Label table title
 
   
 ```
@@ -292,11 +338,11 @@ test7 %>%
 test7 %>% 
   filter(!Sample_ID == '70') %>% 
   ggplot(aes(x= Weight, y = particle_conc))+
-  geom_point(aes(color=factor(Day)))+
+  geom_point(size = 3,aes(color=factor(Day)))+
   geom_smooth(method = "lm", level = 0.95)+
   xlab("\nWeight (g)\n") + # X axis label
   ylab("Exosomes/ml\n") + # Y axis label
-  ggtitle("Linear Regression of Exosome Concentration\nvs. Weight")+ #title
+  ggtitle("Linear Regression of Exosome \nConcentration vs. Weight")+ #title
   labs(color="Day")#Label table title
 
 ```
@@ -305,12 +351,12 @@ test7 %>%
 ```{r}
 test7 %>% 
   ggplot(aes(x= Pups, y = particle_conc))+
-  geom_point(aes(color=factor(Day)))+
-  geom_smooth(method = "lm", level = 0.95)+
-  
-  xlab("\nWeight (g)\n") + # X axis label
+  geom_point(size = 4, aes(color=factor(Day)))+
+  #geom_smooth(method = "lm", level = 0.95)+
+  scale_x_continuous(breaks=seq(0,12,2))+
+  xlab("\nNumbwe of Pups\n") + # X axis label
   ylab("Exosomes/ml\n") + # Y axis label
-  ggtitle("Linear Regression of Exosome Concentration\nvs. Number of Pups")+ #title
+  ggtitle("Linear Regression of Exosome \nConcentration vs. Number of Pups")+ #title
   labs(color="Day")#Label table title
 ```
 
@@ -328,12 +374,63 @@ mean_placenta <- tc %>%
 mean_placenta %>% 
   inner_join(test7) %>% 
   ggplot(aes(x= mean_plac, y = particle_conc))+
-  geom_point(aes(color=factor(Day)))+
-  geom_smooth(method = "lm", level = 0.95)
+  geom_point(size= 3,aes(color=factor(Day)))+
+  geom_smooth(method = "lm", level = 0.95)+
+  xlab("\nPlacental Weight (mg)\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="G.D.")#Label table title
 
 ```
 
-```{r}
 
+```{r}
+mean_placenta %>% 
+  inner_join(test7) %>% 
+  ggplot(aes(x = Pups, y = particle_conc))+
+  geom_point(size= 3,aes(color=factor(Day)))+
+  geom_smooth(method = "lm", se= FALSE)+
+  facet_wrap(~Day)+
+  scale_x_continuous(breaks=seq(1,12,2))+
+  xlab("\nNumbr of Pups\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="G.D.")#Label table title
+```
+
+
+
+```{r}
+test3 %>% 
+  filter(!Day %in% c('1','20')) %>% 
+  group_by(Day) %>% 
+  ggplot(aes(factor(Day),particle_conc, color=Day)) +
+  geom_point(size=3)+
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")#Label table title
+
+
+```
+
+
+
+```{r}
+nanosight_plot <- test1 %>%
+  filter(Sample_ID == '75') %>% 
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se, ymax=tech_mean+tech_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size (nm)") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~Injection)
+
+nanosight_plot
+
+ggsave("Nanosight_plot.png", height = 5, width = 7, units = "in", dpi = 600)
 ```
 
