@@ -6,8 +6,7 @@ output:
   html_notebook: default
   pdf_document: default
 ---
-#Overall Objective
-
+#Overall Objective 
 
 
 ##Load Libraries
@@ -115,7 +114,9 @@ test1$Sample_ID_correct = factor(test1$Sample_ID, levels=c('1','2','3','4','5','
 
 graph1 <- test1 %>%
   ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
-  geom_ribbon(aes(ymin=tech_mean-tech_se, ymax=tech_mean+tech_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_ribbon(aes(ymin=tech_mean-tech_se,
+                  ymax=tech_mean+tech_se),
+                  alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
   geom_line(size=2.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
@@ -127,7 +128,125 @@ graph1 <- test1 %>%
 graph1
 ```
 
+####Looking at individual gestational day nanosight line plots  
 
+**Virgin Mice**
+```{r, message=FALSE, warning=FALSE}
+test1 %>%
+  filter(Day == '1') %>% 
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se,
+                  ymax=tech_mean+tech_se),
+                  alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~ Sample_ID_correct)+
+  geom_vline(xintercept = 140)+
+  annotate("text", x= 235, y = 4E9, label= "140nm")
+```
+
+**GD 5.5**  
+```{r, message=FALSE, warning=FALSE}
+test1 %>%
+  filter(Day == '5') %>% 
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se,
+                  ymax=tech_mean+tech_se),
+                  alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~ Sample_ID_correct)+
+  geom_vline(xintercept = 140)+
+  annotate("text", x= 235, y = 4E9, label= "140nm")
+```
+
+
+**GD 10.5**  
+```{r, message=FALSE, warning=FALSE}
+test1 %>%
+  filter(Day == '10') %>% 
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se,
+                  ymax=tech_mean+tech_se),
+                  alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~ Sample_ID_correct)+
+  geom_vline(xintercept = 140)+
+  annotate("text", x= 235, y = 4E9, label= "140nm")
+```
+
+**GD 14.5**  
+```{r, message=FALSE, warning=FALSE}
+test1 %>%
+  filter(Day == '14') %>% 
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se,
+                  ymax=tech_mean+tech_se),
+                  alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~ Sample_ID_correct)+
+  geom_vline(xintercept = 140)+
+  annotate("text", x= 235, y = 4E9, label= "140nm")
+```
+
+
+
+**GD 17.5**  
+```{r, message=FALSE, warning=FALSE}
+test1 %>%
+  filter(Day == '17') %>% 
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se,
+                  ymax=tech_mean+tech_se),
+                  alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~ Sample_ID_correct)+
+  geom_vline(xintercept = 140)+
+  annotate("text", x= 235, y = 4E9, label= "140nm")
+```
+
+
+**1 Day Post**  
+```{r, message=FALSE, warning=FALSE}
+test1 %>%
+  filter(Day == '20') %>% 
+  ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
+  geom_ribbon(aes(ymin=tech_mean-tech_se,
+                  ymax=tech_mean+tech_se),
+                  alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Injection")+ #Label table title
+  facet_wrap( ~ Sample_ID_correct)+
+  geom_vline(xintercept = 140)+
+  annotate("text", x= 235, y = 4E9, label= "140nm")
+```
 
 ### Graphing averaged samples by experimental day
 ```{r, warning=FALSE}
@@ -275,7 +394,7 @@ nano_100_data_plot
 tidy(shapiro.test(test3$particle_conc))
 
 ```
-p value >0.05 therefore conlude data is normally distributed
+p value >0.05 therefore conclude data is normally distributed
 
 ###ANOVA
 ```{r}
@@ -432,5 +551,45 @@ nanosight_plot <- test1 %>%
 nanosight_plot
 
 ggsave("Nanosight_plot.png", height = 5, width = 7, units = "in", dpi = 600)
+```
+
+
+```{r}
+
+ test3 %>% 
+  filter(!Sample_ID %in% c('1','6','15','16','19','24','29','6','28','32')) %>% 
+  group_by(Day) %>% 
+  ggplot(aes(x= Day, y = particle_conc, color=Day)) +
+  geom_boxplot(colour="black",fill=NA) + 
+  geom_point(aes(text = paste("Sample ID:", Sample_ID)),
+             position='jitter',size=3)+
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")+ # Label table title
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_color_discrete(labels=c("Virgin","5","10","14","17","1 Day Post")) # Change Legend
+
+
+```
+
+```{r}
+ filtered_data <- test3 %>% 
+  filter(!Sample_ID %in% c('1','6','15','16','19','24','29','6','28','32'))
+
+
+filtered_fit <- aov(particle_conc ~ Day, data=filtered_data)
+filtered_stats <- tidy(filtered_fit)
+filtered_stats
+
+filtered_HSD <- TukeyHSD(filtered_fit)
+filtered_tukey <- tidy(filtered_HSD)
+
+filtered_tukey %>% 
+  filter(adj.p.value < 0.05) %>% 
+  arrange(adj.p.value)
+
+
 ```
 
