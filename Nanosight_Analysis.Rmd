@@ -2,7 +2,9 @@
 title: "Nanosight Analysis"
 author: "Sean Nguyen"
 output:
-  html_document: default
+  html_document: 
+    df_print: paged
+    theme: flatly
   html_notebook: default
   pdf_document: default
 ---
@@ -21,16 +23,19 @@ library(plotly)
 
 ##Import data
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-#setwd("~/GitHub/time-course/data")
-setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
+setwd("~/GitHub/time-course/data")
+#setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
 
 rawdata <- "revised_MASTER-ExperimentSummary.csv"
 timecourse <- "timecourse2017.csv"
+standards <- "standards_MASTER-ExperimentSummary.csv"
 
 
 data <- read_csv(rawdata)
 tc <- read_csv(timecourse, na = c("","NA"))
+std <- read_csv(standards)
 ```
+
 
 ##Convert data from 'wide' to 'long' format
 ```{r, message=FALSE, warning=FALSE}
@@ -41,6 +46,126 @@ data1 <- data %>%
 data2 <- data1 %>% 
   separate(Sample, into=c("Sample_ID","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
   select(-`_`)
+
+
+std1 <- std %>% 
+  gather(Sample,Count,2:82)
+
+std2 <- std1 %>% 
+  separate(Sample, into=c("Sample_ID","When","Dilution_factor","Nano_day","Injection","Tech_Rep", sep = "_")) %>% 
+  select(-`_`)
+
+
+std2$Sample_ID <- as.factor(std2$Sample_ID)
+std2$When <- as.factor(std2$When)
+std2$Dilution_factor <- as.numeric(std2$Dilution_factor)
+std2$Injection<- as.factor(std2$Injection)
+std2$Nano_day <- as.numeric(std2$Nano_day)
+
+```
+###Backcalculate standards
+```{r}
+std2 <- std2 %>% 
+  mutate(True_Count=Dilution_factor*Count)
+
+std2$Nano_day <-  factor(std2$Nano_day, levels=c('1','2','3','4','5','6','7'))
+std2$When <- factor(std2$When, levels=c('before','after'))
+```
+
+###Summarize three technical replicates
+```{r}
+std3 <- std2 %>% 
+  group_by(particle_size,Sample_ID,When,Dilution_factor,Nano_day,Injection) %>% 
+  summarise( tech_N = length(True_Count),
+             tech_mean = mean(True_Count),
+             tech_sd = sd(True_Count),
+             tech_se = tech_sd/sqrt(tech_N))
+std3
+```
+###Summarize by injection
+```{r}
+std4 <- std3 %>% 
+  group_by(Nano_day,When,particle_size) %>% 
+  summarise( inj_N = length(tech_mean),
+             inj_mean = mean(tech_mean),
+             inj_sd = sd(tech_mean),
+             inj_se = inj_sd/sqrt(inj_N))
+std4
+
+```
+
+
+###Plot before and after plots, facet by experimental day
+```{r, message=FALSE, warning=FALSE}
+std_day <- std4 %>% 
+  ggplot(aes(x=particle_size,y=inj_mean,color=When))+
+  geom_ribbon(aes(ymin=inj_mean-inj_se, ymax=inj_mean+inj_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Condition")+ #Label table title
+  facet_grid(. ~ Nano_day)
+std_day
+
+```
+###Plot facet by when and experimental day
+```{r}
+std_day_facet <- std4 %>% 
+  ggplot(aes(x=particle_size,y=inj_mean,color=When))+
+  geom_ribbon(aes(ymin=inj_mean-inj_se, ymax=inj_mean+inj_se),alpha=0.2,fill = alpha('grey12', 0.2)) + #error bars
+  geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Particle Size") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="Condition")+ #Label table title
+  facet_grid(When ~ Nano_day)
+std_day_facet
+
+```
+
+###Particle concentrations from each experimental day
+```{r}
+std_df <- std4 %>% 
+  group_by(Nano_day,When) %>% 
+  summarise(total=sum(inj_mean))
+std_df
+```
+###Bar graph of particle concentrations
+```{r}
+std_df %>% 
+  ggplot(aes(x=Nano_day,y=total,fill=When))+
+  geom_col(position="dodge")+
+  scale_y_continuous(expand=c(0,0))+ #set bottom of graph
+  xlab("Experimental Day") + # X axis label
+  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  labs(color="When") #Label table title
+```
+###Intraassay variability
+```{r}
+Intra.assay_cv <- std_df %>% 
+  group_by(Nano_day) %>% 
+  summarise(Day_N = length(total),
+             Day_mean = mean(total),
+             Day_sd = sd(total),
+             Day_se = Day_sd/sqrt(Day_N),
+            Day_cv = Day_sd/Day_mean )
+Intra.assay_cv
+```
+
+###Inter assay variability
+```{r}
+Inter.assay <- Intra.assay_cv %>% 
+ summarise(Exp_N = length(Day_mean),
+             Exp_mean = mean(Day_mean),
+             Exp_sd = sd(Day_mean),
+             Exp_se = Exp_sd/sqrt(Exp_N),
+            Exp_cv = Exp_sd/Exp_mean )
+Inter.assay
+
 ```
 
 ##Factor the data into categorical variables
@@ -285,9 +410,9 @@ test4
 ###Boxplot
 ```{r, warning=FALSE}
 plot1 <- test3 %>% 
-  filter(!Sample_ID %in% c('6','28','32')) %>% 
+  #filter(!Sample_ID %in% c('6','28','32')) %>% 
   group_by(Day) %>% 
-  ggplot(aes(x= Day, y = particle_conc, color=Day)) +
+  ggplot(aes(x= Day, y = particle_conc/1E9, color=Day)) +
   geom_boxplot(colour="black",fill=NA) + 
   geom_point(aes(text = paste("Sample ID:", Sample_ID)),
              position='jitter',size=3)+
@@ -589,6 +714,29 @@ filtered_tukey <- tidy(filtered_HSD)
 filtered_tukey %>% 
   filter(adj.p.value < 0.05) %>% 
   arrange(adj.p.value)
+
+
+```
+
+###Mean placenta weight
+```{r}
+mean_placenta %>% 
+  group_by(Day) %>% 
+  summarise(mean_N   = length(mean_plac),
+            day_mean = mean(mean_plac),
+            day_sd   = sd(mean_plac),
+            day_se   = day_sd/sqrt(mean_N)) %>% 
+  ggplot(aes(x = Day, y = day_mean, fill = Day))+
+  geom_bar(stat="identity")+
+  geom_errorbar(aes(ymin = day_mean-day_se, ymax = day_mean+day_se), width=.5, 
+                size=0.8, colour="black", position=position_dodge(.9)) + #error bars
+  scale_y_continuous(breaks = seq(0,125,25),
+                     limits = c(0,125),
+                     expand = c(0,0))+ #set bottom of graph and scale
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nWeight (mg)\n") + # Y axis label
+  ggtitle("Mouse Placental Weight\nThroughout Pregnancy\n")+ #title
+  labs(fill="Gestational Day") # Label table title
 
 
 ```
