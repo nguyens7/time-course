@@ -9,7 +9,17 @@ output:
   pdf_document: default
 ---
 #Overall Objective 
+Determine the concentration of total exosomes throughout pregnancy in WT mated C57/B6 mice.  Time points for the study included Virgin (day 1), gestational day (G.D) 5.5, 10.5, 14.5, 17.5 and 1 day post partum (day 20). six animals were used for each of the six time points in the study. A volume of 100ul of plasma was obtained by means of cardiac puncture or deeply anesthetized animals. Plasma exosomes were isolated using the  total exosome isolation reagent (ThermoFisher) and resuspended in 30ul of PBS. Samples were then blinded (randomly assigned numbers) and analzed by Nanosight (NS300 Malvern) nanoparticle tracking analysis.  For each day of nanosight analysis, one sample from each of the time points was chosen and analyzed by Nanosight. Before and after samples were analyzed, 100nm polystyrene bead standards were analyzed (1:125 in PBS) to determine intra and inter assay variability. 
 
+###Nanosight measurement/ experimental setup
+Samples and standards were measured twice by two separate injections (from separate tubes) into the machine.  Three, thirty second 30 second videos were recorded and analyzed by Nanosight NTA 3.2 and exported raw data was exported as a .csv file which was minimally processed for easy import into R.
+
+
+###Nanosight acquisition settings  
+||Gain|Level|Threshold|  
+|---|---|---|---|
+|Standards|1|11|4|
+|Samples|1|12|4|
 
 ##Load Libraries
 
@@ -104,7 +114,7 @@ std_day <- std4 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\n100nm standards")+ #title
   labs(color="Condition")+ #Label table title
   facet_grid(. ~ Nano_day)
 std_day
@@ -119,7 +129,7 @@ std_day_facet <- std4 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\n100nm standards")+ #title
   labs(color="Condition")+ #Label table title
   facet_grid(When ~ Nano_day)
 std_day_facet
@@ -141,7 +151,7 @@ std_df %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Experimental Day") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\n100nm standards")+ #title
   labs(color="When") #Label table title
 ```
 ###Intraassay variability
@@ -246,7 +256,7 @@ graph1 <- test1 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\nMouse Plasma Throughout Pregnancy")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct, nrow=7)
 
@@ -286,7 +296,7 @@ test1 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\nGD 5.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
   geom_vline(xintercept = 140)+
@@ -306,7 +316,7 @@ test1 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\nGD 10.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
   geom_vline(xintercept = 140)+
@@ -325,7 +335,7 @@ test1 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\nGD 14.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
   geom_vline(xintercept = 140)+
@@ -346,7 +356,7 @@ test1 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\nGD 17.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
   geom_vline(xintercept = 140)+
@@ -366,7 +376,7 @@ test1 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\n1 Day Post Partum Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
   geom_vline(xintercept = 140)+
@@ -383,7 +393,7 @@ graph2 <- test2 %>%
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
   ylab("\nMean Particle Concentration/ml\n") + # Y axis label
-  ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
+  ggtitle("Nanosight Histogram of\nMouse Plasma Throughout Pregnancy")+ #title
   labs(color="Condition")+ #Label table title
   facet_wrap(~ TEI_Day, ncol=7)
 
@@ -399,6 +409,7 @@ test3
 ### Summary statistics of particle concentration (averaging n=6 for each time point)
 ```{r}
 test4 <- test3 %>% 
+  filter(!Sample_ID %in% c('6','26','28','32')) %>% #Removing outliers
   group_by(Day) %>% 
   summarise(Day_N=length(particle_conc),
             Day_mean = mean(particle_conc),
@@ -410,7 +421,7 @@ test4
 ###Boxplot
 ```{r, warning=FALSE}
 plot1 <- test3 %>% 
-  #filter(!Sample_ID %in% c('6','28','32')) %>% 
+  filter(!Sample_ID %in% c('6','26','28','32')) %>% 
   group_by(Day) %>% 
   ggplot(aes(x= Day, y = particle_conc/1E9, color=Day)) +
   geom_boxplot(colour="black",fill=NA) + 
@@ -440,22 +451,25 @@ plot1
 ###Bar plot
 ```{r, warning=FALSE}
 plot <- test4 %>% 
-  ggplot(aes(x=Day, y=Day_mean, fill=Day ))+ #plot
+  ggplot(aes(x=Day, y=Day_mean, fill=Day))+ #plot
   geom_col()+
   geom_errorbar(aes(ymin=Day_mean-Day_se, ymax=Day_mean+Day_se), width=.5, 
                 size=0.8, colour="black", position=position_dodge(.9)) + #error bars
-  scale_y_continuous(expand=c(0,0), breaks = seq(1E11,4E11,1E11))+ #set bottom of graph and scale
   xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
-  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(fill="Condition") + # Label table title
+  ylab("\nMean Vesicles /ml\n") + # Y axis label
+  ggtitle("\nPlasma Vesicle Concentration\nAcross Pregnancy\n")+ #title
+  guides(fill=FALSE) + # Remove legend
+  scale_y_continuous(breaks = seq(1E11,5E11,1E11),
+                     limits = c(0,5E11),
+                     expand=c(0,0))+ #set bottom of graph
   scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
                    labels=c("Virgin","5","10","14","17","1 Day Post")) +
-  scale_fill_discrete(labels=c("Virgin","5","10","14","17","1 Day Post"))
+  scale_fill_discrete(labels=c("Virgin","5","10","14","17","1 Day Post")) # Rename bottom
+
 
 plot
 
-ggsave("Exosome_barplot.png", height = 5, width = 7, units = "in", dpi = 600)
+ggsave("Vesicle_barplot.png", height = 5, width = 7, units = "in", dpi = 600)
 ```
 
 
@@ -484,34 +498,7 @@ plot2
 ggplotly(plot2)
 ```
 
-#Looking at nanoparticle range
-```{r, message=FALSE, warning=FALSE}
-nano_100 <- data4 %>% 
-  filter(particle_size<140.5)
-
-nano_100_data <- left_join(tc1,nano_100, by= "Sample_ID")
-
-nano_100_data_plot <- nano_100_data %>%
-  group_by(Day,Sample_ID) %>% 
-  summarise(particle_conc=sum(inj_mean)) %>% 
-  filter(!Sample_ID %in% c('6','28','32')) %>% 
-  ggplot(aes(factor(Day),particle_conc, color=Day)) +
-  geom_boxplot(colour="black",fill=NA) + 
-  geom_point(position='jitter',size=3)+
-  xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
-  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(color="Condition") + # Label table title
-  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
-                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
-  scale_color_discrete(labels=c("Virgin","5","10","14","17","1 Day Post"))
-
-nano_100_data_plot   
-  
-
-```
-
-#Statistics
+#Statistics on ALL sizes
 
 
 ###Shapiro test
@@ -524,10 +511,8 @@ p value >0.05 therefore conclude data is normally distributed
 ###ANOVA
 ```{r}
 
-jacob <- nano_100_data %>%
-   group_by(Day,Sample_ID) %>% 
-  summarise(particle_conc=sum(inj_mean)) %>% 
-  filter(!Sample_ID %in% c('6','28','32'))
+jacob <-   test3 %>%  # Datset without outliers
+  filter(!Sample_ID %in% c('6','26','32'))
          
 fit <- aov(particle_conc ~ Day, data=jacob)
 stats <- tidy(fit)
@@ -550,7 +535,99 @@ tukey %>%
 ```
 
 
+#Next we can filter on vesicles that are 140nm and smaller
 
+```{r, message=FALSE, warning=FALSE}
+nano_140 <- data4 %>% 
+  filter(particle_size<140.5) %>% 
+  left_join(tc1, by= "Sample_ID") %>% 
+  group_by(Day,Sample_ID) %>% 
+  summarise(particle_conc=sum(inj_mean)) %>% 
+  filter(!Sample_ID %in% c('6','26','28','32'))
+
+nano_140_plot <- nano_140 %>% 
+  ggplot(aes(factor(Day),particle_conc, color=Day)) +
+  geom_boxplot(colour="black",fill=NA) + 
+  geom_point(aes(text = paste("Sample ID:", Sample_ID)),
+             position='jitter',size=3)+
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nMean Exosomes /ml\n") + # Y axis label
+  ggtitle("\nExosome Concentration\nAcross Pregnancy\n")+ #title
+  guides(fill=FALSE) + # Remove legend
+  scale_y_continuous(breaks = seq(1E11,5E11,1E11),
+                     limits = c(0,5E11),
+                     expand=c(0,0))+ #set bottom of graph
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_fill_discrete(labels=c("Virgin","5","10","14","17","1 Day Post")) # Rename bottom
+
+nano_140_plot 
+
+```
+```{r}
+ggplotly(nano_140_plot)
+```
+
+
+```{r}
+nano_140_bar <- nano_140 %>% 
+  group_by(Day) %>% 
+  summarise(N    = length(particle_conc),
+            mean = mean(particle_conc),
+            sd   = sd(particle_conc),
+            se   = sd/sqrt(N)) %>% 
+  ggplot(aes(x= factor(Day),y = mean, fill=Day)) +
+  geom_col()+
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.5, 
+                size=0.8, colour="black", position=position_dodge(.9)) + #error bars
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nMean Exosomes /ml\n") + # Y axis label
+  ggtitle("\nPlasma Exosome Concentration\nAcross Pregnancy\n")+ #title
+  guides(fill=FALSE) + # Remove legend
+  scale_y_continuous(breaks = seq(1E11,5E11,1E11),
+                     limits = c(0,4E11),
+                     expand=c(0,0))+ #set bottom of graph
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_fill_discrete(labels=c("Virgin","5","10","14","17","1 Day Post")) # Rename bottom
+
+nano_140_bar 
+
+ggsave("Exosome_barplot.png", height = 5, width = 7, units = "in", dpi = 600)
+```
+
+
+
+##Statistics on Exosomes only (140nm)
+
+###Shapiro test
+```{r}
+tidy(shapiro.test(nano_140$particle_conc))
+
+```
+p value >0.05 therefore conclude data is normally distributed
+
+###ANOVA
+```{r}
+exo_fit <- aov(particle_conc ~ Day, data=nano_140)
+exo_stats <- tidy(exo_fit)
+exo_stats
+```
+Statistically significant, thus Tukey's HSD post hoc analysis can determine significant differences.
+
+###Tukey Post Hoc Test
+```{r}
+exo_HSD <- TukeyHSD(exo_fit)
+exo_tukey <- tidy(exo_HSD)
+exo_tukey
+```
+
+###Significant Tukey Post Hoc Test Values
+```{r}
+exo_tukey %>%
+  filter(adj.p.value<0.05) %>% 
+  arrange(adj.p.value)
+```
 
 
 
