@@ -102,6 +102,13 @@ std4 <- std3 %>%
              inj_se = inj_sd/sqrt(inj_N))
 std4
 
+
+std_day_nest <- std4 %>% 
+  group_by(Nano_day) %>% 
+  nest()
+
+
+std_day_nest$data[[3]]
 ```
 
 
@@ -113,7 +120,7 @@ std_day <- std4 %>%
   geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\n100nm standards")+ #title
   labs(color="Condition")+ #Label table title
   facet_grid(. ~ Nano_day)
@@ -128,7 +135,7 @@ std_day_facet <- std4 %>%
   geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\n100nm standards")+ #title
   labs(color="Condition")+ #Label table title
   facet_grid(When ~ Nano_day)
@@ -150,7 +157,7 @@ std_df %>%
   geom_col(position="dodge")+
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Experimental Day") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\n100nm standards")+ #title
   labs(color="When") #Label table title
 ```
@@ -255,7 +262,7 @@ graph1 <- test1 %>%
   geom_line(size=2.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nMouse Plasma Throughout Pregnancy")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct, nrow=7)
@@ -276,7 +283,7 @@ test1 %>%
   geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
@@ -295,7 +302,7 @@ test1 %>%
   geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nGD 5.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
@@ -315,7 +322,7 @@ test1 %>%
   geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nGD 10.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
@@ -334,7 +341,7 @@ test1 %>%
   geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nGD 14.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
@@ -355,7 +362,7 @@ test1 %>%
   geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nGD 17.5 Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
@@ -375,7 +382,7 @@ test1 %>%
   geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\n1 Day Post Partum Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~ Sample_ID_correct)+
@@ -392,7 +399,7 @@ graph2 <- test2 %>%
   geom_line(size=2) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nMouse Plasma Throughout Pregnancy")+ #title
   labs(color="Condition")+ #Label table title
   facet_wrap(~ TEI_Day, ncol=7)
@@ -456,7 +463,7 @@ plot <- test4 %>%
   geom_errorbar(aes(ymin=Day_mean-Day_se, ymax=Day_mean+Day_se), width=.5, 
                 size=0.8, colour="black", position=position_dodge(.9)) + #error bars
   xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nMean Vesicles /ml\n") + # Y axis label
+  ylab("\nMean Vesicles Concentration\n(Vessicles/ml)\n") + # Y axis label
   ggtitle("\nPlasma Vesicle Concentration\nAcross Pregnancy\n")+ #title
   guides(fill=FALSE) + # Remove legend
   scale_y_continuous(breaks = seq(1E11,5E11,1E11),
@@ -483,7 +490,7 @@ plot2 <- test7 %>%
   geom_point(position= 'dodge',size=4)+
   scale_shape_manual(values=c(15,16,17,18,22,23,24))+
   xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
+  ylab("\nMean Vesicles Concentration\n(Vessicles/ml)\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="Condition") + # Label table title
   scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
@@ -551,7 +558,7 @@ nano_140_plot <- nano_140 %>%
   geom_point(aes(text = paste("Sample ID:", Sample_ID)),
              position='jitter',size=3)+
   xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nMean Exosomes /ml\n") + # Y axis label
+  ylab("\nMean Exosome Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("\nExosome Concentration\nAcross Pregnancy\n")+ #title
   guides(fill=FALSE) + # Remove legend
   scale_y_continuous(breaks = seq(1E11,5E11,1E11),
@@ -581,7 +588,7 @@ nano_140_bar <- nano_140 %>%
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.5, 
                 size=0.8, colour="black", position=position_dodge(.9)) + #error bars
   xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nMean Exosomes /ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("\nPlasma Exosome Concentration\nAcross Pregnancy\n")+ #title
   guides(fill=FALSE) + # Remove legend
   scale_y_continuous(breaks = seq(1E11,5E11,1E11),
@@ -633,7 +640,7 @@ exo_tukey %>%
 
 ```{r}
 test8 <- test7 %>% 
-  filter(!Day == "20")
+  filter(!Day == "20" & !Sample_ID == '70')
 
 fit <- lm(particle_conc ~ Weight ,data = test8)
 
@@ -649,7 +656,7 @@ test7 %>%
   geom_point()+
   geom_smooth()+
   xlab("\nWeight (g)\n") + # X axis label
-  ylab("Exosomes/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Linear Regression of Exosome \nConcentration vs. Weight")+ #title
   labs(color="Day")#Label table title
 
@@ -662,7 +669,7 @@ test7 %>%
   geom_point(size = 3,aes(color=factor(Day)))+
   geom_smooth(method = "lm", level = 0.95)+
   xlab("\nWeight (g)\n") + # X axis label
-  ylab("Exosomes/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Linear Regression of Exosome \nConcentration vs. Weight")+ #title
   labs(color="Day")#Label table title
 
@@ -676,7 +683,7 @@ test7 %>%
   #geom_smooth(method = "lm", level = 0.95)+
   scale_x_continuous(breaks=seq(0,12,2))+
   xlab("\nNumbwe of Pups\n") + # X axis label
-  ylab("Exosomes/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Linear Regression of Exosome \nConcentration vs. Number of Pups")+ #title
   labs(color="Day")#Label table title
 ```
@@ -698,7 +705,7 @@ mean_placenta %>%
   geom_point(size= 3,aes(color=factor(Day)))+
   geom_smooth(method = "lm", level = 0.95)+
   xlab("\nPlacental Weight (mg)\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="G.D.")#Label table title
 
@@ -714,7 +721,7 @@ mean_placenta %>%
   facet_wrap(~Day)+
   scale_x_continuous(breaks=seq(1,12,2))+
   xlab("\nNumbr of Pups\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="G.D.")#Label table title
 ```
@@ -728,7 +735,7 @@ test3 %>%
   ggplot(aes(factor(Day),particle_conc, color=Day)) +
   geom_point(size=3)+
   xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="Condition")#Label table title
 
@@ -745,7 +752,7 @@ nanosight_plot <- test1 %>%
   geom_line(size=1.0) + xlim(0,500)+ #line size, x-axis scale
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
   xlab("Particle Size (nm)") + # X axis label
-  ylab("\nMean Particle Concentration/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\nVirgin Mouse Plasma")+ #title
   labs(color="Injection")+ #Label table title
   facet_wrap( ~Injection)
@@ -766,7 +773,7 @@ ggsave("Nanosight_plot.png", height = 5, width = 7, units = "in", dpi = 600)
   geom_point(aes(text = paste("Sample ID:", Sample_ID)),
              position='jitter',size=3)+
   xlab("\nDay of Gestation\n") + # X axis label
-  ylab("\nExosomes/ml\n") + # Y axis label
+  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="Condition")+ # Label table title
   scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
