@@ -690,7 +690,7 @@ test7 %>%
 
 ```{r}
 mean_placenta <- tc %>% 
-  filter(Day %in% c('10','14','17') & !Sample_ID %in% c('70','73','74','75')) %>%
+  #filter(Day %in% c('10','14','17') & !Sample_ID %in% c('70','73','74','75')) %>%
   select(-(TEI_Day:Pup_right),-Resorp) %>% 
   gather("Placenta_avg","Plac_weight", 3:5) %>%
   group_by(Day,Sample_ID) %>% 
@@ -708,6 +708,12 @@ mean_placenta %>%
   ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
   labs(color="G.D.")#Label table title
+
+plac_weight <- mean_placenta %>% 
+  inner_join(test7) %>% 
+  filter(Day %in% c('10','14','17'))
+
+summary(lm(particle_conc ~ mean_plac, data=plac_weight))
 
 ```
 
