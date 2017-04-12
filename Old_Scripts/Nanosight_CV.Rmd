@@ -1,0 +1,78 @@
+---
+title: "Nanosight Calibration and Validation CV"
+author: "Sean Nguyen"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+#Introduction to Using R
+R is an incredibly powerful statistical programming language that allows you to process and analyze lots of data and to organize it and process it efficiently and to generate beautiful publication ready figures.  The best part of all this is that it is free and all the work that you do will theoretically be 100% reproducible.
+&nbsp;
+```{r  load_packages, include=FALSE}
+library(tidyverse)
+library(cowplot)
+```
+
+
+
+#Importing your data
+This section will demonstrate how to get started with analyzing data using R.
+
+**You will first want to tell R where to find all of your files, you can do this with the "setwd" command**  
+- This is where R will read in all of your files and output your data that you generate(plots, CSVs, etc)  
+
+**You can abbreviate long filenames by calling it an object, in this case we can make our long csv = "my data"**  
+- This way you can just use "mydata" and it will automatically insert the filename  
+
+**Next we will want to import the csv into r and we can accomplish this with the "read_csv" function**  
+- This will import our csv file and we can make this an object known as "data"  
+- Anytime we want to see the dataframe we can simply run "data"
+
+```{r}
+setwd("~/NanoVideos/2017-02-13/")
+
+mydata <- "std_combined-ExperimentSummary.csv"
+
+data <- read_csv(mydata)
+
+```
+
+&nbsp;
+We can quickly look at the dimensions of the dataframe with **dim()**
+&nbsp;
+```{r}
+dim(data)
+```
+
+&nbsp;
+We can see the top of the dataframe with **head()**
+&nbsp;
+```{r}
+head(data)
+```
+
+&nbsp;
+You can also look at the bottom with **tail()**
+&nbsp;
+
+```{r}
+tail(data)
+```
+
+#Convert data from wide type to long
+```{r}
+data1 <- data %>%
+  gather(Sample,Count,2:10 )
+data1
+```
+
+#Separate samples by identifiers 
+
+```{r}
+data2 <- data1 %>% 
+  separate(Sample, into=c("Sample_type","Dilution_factor","Injection","Tech_rep", sep = "_")) %>% 
+  select(-`_`)
+data2
+```
+

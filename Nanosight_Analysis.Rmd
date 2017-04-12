@@ -2,7 +2,7 @@
 title: "Nanosight Analysis"
 author: "Sean Nguyen"
 output:
-  html_document: 
+  html_document:
     df_print: paged
     theme: flatly
   html_notebook: default
@@ -32,6 +32,8 @@ library(plotly)
 ```
 
 ##Import data
+
+There are total of three datasets that will be used for this experiment.  The raw data from all the samples, the 100nm standards to determine the inter and intra-assay variation as well as the timecourse data that serves as the 'key' to identify Sample_ID to the experiment condition.  
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 setwd("~/GitHub/time-course/data")
 #setwd("~/Library/Mobile\ Documents/com~apple~CloudDocs/time-course/data")
@@ -48,6 +50,7 @@ std <- read_csv(standards)
 
 
 ##Convert data from 'wide' to 'long' format
+The data is in the classical 'wide' format which is easy to understand from a human cognition perspective but we need to make it 'long' so it's easier to process in R.
 ```{r, message=FALSE, warning=FALSE}
 data1 <- data %>%
   gather(Sample,Count,2:250)
@@ -74,6 +77,7 @@ std2$Nano_day <- as.numeric(std2$Nano_day)
 
 ```
 ###Backcalculate standards
+Obtain the 'True_count' by multiplying the 'Count' column by the 'Dilution factor'
 ```{r}
 std2 <- std2 %>% 
   mutate(True_Count=Dilution_factor*Count)
@@ -101,14 +105,6 @@ std4 <- std3 %>%
              inj_sd = sd(tech_mean),
              inj_se = inj_sd/sqrt(inj_N))
 std4
-
-
-std_day_nest <- std4 %>% 
-  group_by(Nano_day) %>% 
-  nest()
-
-
-std_day_nest$data[[3]]
 ```
 
 
@@ -152,7 +148,7 @@ std_df
 ```
 ###Bar graph of particle concentrations
 ```{r}
-std_df %>% 
+std_bar_plot <- std_df %>% 
   ggplot(aes(x=Nano_day,y=total,fill=When))+
   geom_col(position="dodge")+
   scale_y_continuous(expand=c(0,0))+ #set bottom of graph
@@ -160,6 +156,11 @@ std_df %>%
   ylab("\nMean Particle Concentration\n(Particles/ml)\n") + # Y axis label
   ggtitle("Nanosight Histogram of\n100nm standards")+ #title
   labs(color="When") #Label table title
+
+std_bar_plot
+
+ggsave(plot = std_bar_plot, "std_bar_plot.png",
+       height = 5, width = 7, dpi = 300, units= "in")
 ```
 ###Intraassay variability
 ```{r}
@@ -245,7 +246,6 @@ data4
 test2 <- left_join(tc1,data4, by= "Sample_ID")
 
 test2
-
 ```
 
 #Quick visualizations
@@ -412,20 +412,39 @@ test3 <- test2 %>%
   group_by(Day,Sample_ID) %>% 
   summarise(particle_conc=sum(inj_mean))
 test3
+
+#write_csv(test3, "Sample_means.csv")
 ```
-### Summary statistics of particle concentration (averaging n=6 for each time point)
-```{r}
-test4 <- test3 %>% 
-  filter(!Sample_ID %in% c('6','26','28','32')) %>% #Removing outliers
+###Boxplot of all values
+```{r, warning=FALSE}
+plot1 <- test3 %>% 
   group_by(Day) %>% 
-  summarise(Day_N=length(particle_conc),
-            Day_mean = mean(particle_conc),
-            Day_sd = sd(particle_conc),
-            Day_se = Day_sd/sqrt(Day_N))
-test4
+  ggplot(aes(x= Day, y = particle_conc/1E9, color=Day)) +
+  geom_boxplot(colour="black",fill=NA) + 
+  geom_point(aes(text = paste("Sample ID:", Sample_ID)),
+             position='jitter',size=3)+
+  xlab("\nDay of Gestation\n") + # X axis label
+  ylab("\nExosomes/ml\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  labs(color="Condition")+ # Label table title
+  scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
+                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
+  scale_color_discrete(labels=c("Virgin","5","10","14","17","1 Day Post")) # Change Legend
+  
+plot1
+
+#ggsave("Exosome_plot.png", height = 5, width = 7, units = "in", dpi = 600)
+
+```
+We can see that there are outlier values for Virgin, GD 17 and 1 day post. For these box plots, the middle line represents the median (50th percentile), the lower line represents the 25th percentile and the upper line represents the 75th percentile.  The whiskers extend from each end of the box and goes to the farthest nonoutlier point. Outliers are values that are greater than 1.5x the interquartile range from either edge of the box.
+##Plotly of all values
+```{r}
+  ggplotly(plot1)
 ```
 
-###Boxplot
+
+###Boxplot without outliers
+Samples 6, 26, 32 will be excluded because they are greater than 1.5x the interquartile range.  Sample 28 did not have enough blood to be reanalyzed and was thu
 ```{r, warning=FALSE}
 plot1 <- test3 %>% 
   filter(!Sample_ID %in% c('6','26','28','32')) %>% 
@@ -448,10 +467,26 @@ plot1
 
 ```
 
-##Plotly
+##Plotly without outliers
 ```{r}
   ggplotly(plot1)
 ```
+
+### Summary statistics of particle concentration (averaging n=6 for each time point)
+```{r}
+test4 <- test3 %>% 
+  filter(!Sample_ID %in% c('6','26','28','32')) %>% #Removing outliers
+  group_by(Day) %>% 
+  summarise(Day_N=length(particle_conc),
+            Day_mean = mean(particle_conc),
+            Day_sd = sd(particle_conc),
+            Day_se = Day_sd/sqrt(Day_N))
+test4
+```
+
+
+
+
 
 
 
@@ -519,7 +554,7 @@ p value >0.05 therefore conclude data is normally distributed
 ```{r}
 
 jacob <-   test3 %>%  # Datset without outliers
-  filter(!Sample_ID %in% c('6','26','32'))
+  filter(!Sample_ID %in% c('6','26','28','32'))
          
 fit <- aov(particle_conc ~ Day, data=jacob)
 stats <- tidy(fit)
