@@ -53,7 +53,7 @@ std <- read_csv(standards)
 The data is in the classical 'wide' format which is easy to understand from a human cognition perspective but we need to make it 'long' so it's easier to process in R.
 ```{r, message=FALSE, warning=FALSE}
 data1 <- data %>%
-  gather(Sample,Count,2:250)
+  gather(Sample,Count,2:256)
 
 # Separate samples by identifiers 
 data2 <- data1 %>% 
@@ -255,7 +255,7 @@ test2
 
 ### Graphing all samples
 ```{r, warning=FALSE}
-test1$Sample_ID_correct = factor(test1$Sample_ID, levels=c('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','70','73','74','75'))
+test1$Sample_ID_correct = factor(test1$Sample_ID, levels=c('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','70','73','74','75','76'))
 
 graph1 <- test1 %>%
   ggplot(aes(x=particle_size, y=tech_mean,color=Injection ))+ #plot
@@ -509,7 +509,7 @@ plot1 <- test3 %>%
   
 plot1
 
-# ggsave("Exosome_plot.png", height = 5, width = 7, units = "in", dpi = 600)
+ggsave("Exosome_plot_new.png", height = 5, width = 7, units = "in", dpi = 600)
 
 ```
 
@@ -572,7 +572,7 @@ test7 <- test3 %>%
 plot2 <- test7 %>%
   ggplot(aes(x = Day, y = particle_conc, color = Day, shape=TEI_Day))+
   geom_point(position= 'dodge',size=4)+
-  scale_shape_manual(values=c(15,16,17,18,22,23,24))+
+  scale_shape_manual(values=c(15,16,17,18,22,23,24,1))+
   xlab("\nDay of Gestation\n") + # X axis label
   ylab("\nMean Concentration\n(Vesicles/ml)\n") + # Y axis label
   ggtitle("Mouse Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
