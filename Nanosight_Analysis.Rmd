@@ -542,7 +542,7 @@ test4
 ```{r, warning=FALSE}
 plot <- test4 %>% 
   ggplot(aes(x = Day, y = Day_mean))+ #plot
-  geom_col()+
+  geom_bar(stat = "identity", color = "Black", width = 0.8)+
   geom_errorbar(aes(ymin = Day_mean-Day_se, ymax = Day_mean+Day_se), width=.4,
                 size = 0.8, colour = "black", position = position_dodge(.9)) + #error bars
   xlab("\nDay of Gestation\n") + # X axis label
