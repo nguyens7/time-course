@@ -496,19 +496,21 @@ Samples 6, 26, 32 will be excluded because they are greater than 1.5x the interq
 plot1 <- test3 %>% 
   filter(!Sample_ID %in% c('6','26','28','32')) %>% 
   group_by(Day) %>% 
-  ggplot(aes(x= Day, y = particle_conc/1E9, color=Day)) +
+  ggplot(aes(x= Day, y = particle_conc, color=Day)) +
   geom_boxplot(colour="black",fill=NA) + 
   geom_point(aes(text = paste("Sample ID:", Sample_ID)),
              position='jitter',size=3)+
-  xlab("\nDay of Gestation\n") + # X axis label
+  xlab("Day of Gestation\n") + # X axis label
   ylab("\nExosomes/ml\n") + # Y axis label
-  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(color="Condition")+ # Label table title
+  # ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  # 
+  guides(color=FALSE)+
   scale_x_discrete(breaks=c("1","5","10","14","17","20"),  # Change X axis label
-                   labels=c("Virgin","5","10","14","17","1 Day Post")) +
-  scale_color_discrete(labels=c("Virgin","5","10","14","17","1 Day Post")) # Change Legend
-  
-plot1
+                   labels=c("Non-Pregnant","5","10","14","17","1 Day Post")) +
+  scale_color_discrete(labels=c("Non-Pregnant","5","10","14","17","1 Day Post")) # Change Legend
+
+
+plot1 
 
 ggsave("Exosome_plot_new.png", height = 5, width = 7, units = "in", dpi = 600)
 
@@ -930,7 +932,7 @@ ASRI_plot <- test2 %>%
   # ggtitle("Nanosight Histogram of Mouse \nPlasma During Pregnancy")+ #title
   labs(color="")+ #Label table title
  # scale_color_discrete(labels = c("Virgin","GD14.5"))+
-  scale_color_npg(labels = c("Virgin","GD14.5"))+
+  scale_color_npg(labels = c("Non-pregnant","GD14.5"))+
   guides(color = guide_legend(reverse = TRUE))+
   theme(legend.position = c(.85,.4))
 
