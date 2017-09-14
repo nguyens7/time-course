@@ -512,7 +512,7 @@ plot1 <- test3 %>%
 
 plot1 
 
-ggsave("Exosome_plot_new.png", height = 5, width = 7, units = "in", dpi = 600)
+# ggsave("Exosome_plot_new.png", height = 5, width = 7, units = "in", dpi = 600)
 
 ```
 
@@ -607,23 +607,29 @@ p value >0.05 therefore conclude data is normally distributed
 
 jacob <-  test3 %>%  # Datset without outliers
   filter(!Sample_ID %in% c('6','26','28','32'))
-         
-fit <- aov(particle_conc ~ Day, data=jacob)
-stats <- tidy(fit)
-stats
+
+# ANOVA         
+ANOVA <- aov(particle_conc ~ Day, data=jacob)
+  
+
+ANOVA %>% 
+  tidy()
 ```
 Statistically significant, thus Tukey's HSD post hoc analysis can determine significant differences.
 
 ###Tukey Post Hoc Test
 ```{r}
-HSD <- TukeyHSD(fit)
-tukey <- tidy(HSD)
-tukey
+tukey <- TukeyHSD(ANOVA) 
+
+tidy_tukey <- tukey %>% 
+  tidy()
+
+tidy_tukey
 ```
 
 ###Significant Tukey Post Hoc Test Values
 ```{r}
-tukey %>%
+tidy_tukey %>%
   filter(adj.p.value<0.05) %>% 
   arrange(adj.p.value)
 ```
