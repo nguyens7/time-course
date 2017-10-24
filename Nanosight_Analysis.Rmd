@@ -772,14 +772,75 @@ test7 %>%
 ```{r}
 test7 %>% 
   ggplot(aes(x= Pups, y = particle_conc))+
-  geom_point(size = 4, aes(color=factor(Day)))+
-  #geom_smooth(method = "lm", level = 0.95)+
-  scale_x_continuous(breaks=seq(0,12,2))+
-  xlab("\nNumbwe of Pups\n") + # X axis label
-  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
+  geom_point(size = 3,alpha = 0.5, aes(color=factor(Day)))+
+  geom_smooth(method = "lm", level = 0.95)+
+  scale_x_continuous(limits=c(0,13),
+                     breaks=seq(0,14,2))+
+  # scale_y_continuous(limits = c(0,5E11),
+  #                    expand=c(0,0))+
+  xlab("\nNumber of Pups\n") + # X axis label
+  ylab("\nMean Exosome Concentration\n(Exosomes/ml)\n") + # Y axis label
   ggtitle("Linear Regression of Exosome \nConcentration vs. Number of Pups")+ #title
   labs(color="Day")#Label table title
 ```
+
+```{r}
+weight_vs_pup_plot <- test7 %>% 
+  ggplot(aes(x= Pups, y = Weight))+
+  geom_point(size = 5,alpha = 0.5, aes(color=factor(Day)))+
+  geom_smooth(method = "lm", level = 0.95)+
+  scale_x_continuous(limits=c(0,13),
+                     breaks=seq(0,14,2))+
+  # scale_y_continuous(limits = c(0,5E11),
+  #                    expand=c(0,0))+
+  xlab("\nNumber of Pups\n") + # X axis label
+  ylab("\nMouse Weight (g)\n") + # Y axis label
+  ggtitle("Linear Regression of Weight vs. Number of Pups by Gestational Day")+ #title
+  facet_wrap(~Day)+
+  labs(color="Day")#Label table title
+
+
+weight_vs_pup_plot <- weight_vs_pup_plot + scale_color_npg()
+
+
+# ggsave(plot = weight_vs_pup_plot, "weight_vs_pup_plot.png",
+#        height = 5, width = 7, dpi = 600, units= "in")
+
+```
+
+
+```{r}
+lm(particle_conc~Pups, test7) %>% 
+  summary()
+
+
+lm(particle_conc~Weight, test7) %>% 
+  summary()
+
+lm(Weight~Pups, test7) %>% 
+  summary()
+```
+```{r}
+model <- test7 %>% 
+  group_by(Day) %>% 
+  nest %>% 
+  mutate(weight_pups = map(data, ~lm(Weight~Pups, data = .)),
+         part_pups = map(data, ~lm(particle_conc~Pups, data = .)),
+         part_weight = map(data, ~lm(particle_conc~Weight, data = .))) %>% 
+  ungroup()
+
+finished_model <- model %>%
+  gather(comparison,model,3:5) %>% 
+  mutate(model_glance = map(model, glance),
+         model_tidy = map(model, tidy)) %>% 
+  unnest(model_glance) %>% 
+  group_by(comparison) %>% 
+  arrange(desc(adj.r.squared))
+
+
+finished_model
+```
+
 
 ```{r}
 mean_placenta <- tc %>% 
@@ -792,39 +853,71 @@ mean_placenta <- tc %>%
             sd = sd(Plac_weight)*1000,  #convert g to mg
             se = sd/sqrt(N))
 
-mean_placenta %>% 
+plasma_exo_vs_weight_plot <- mean_placenta %>% 
   inner_join(test7) %>% 
+  filter(Day %in% c(10,14,17)) %>% 
   ggplot(aes(x= mean_plac, y = particle_conc))+
   geom_point(size= 3,aes(color=factor(Day)))+
   geom_smooth(method = "lm", level = 0.95)+
+    scale_x_continuous(limits=c(0,120))+
+  scale_y_continuous(limits = c(0,5.5E11),
+                     expand=c(0,0)) +
+  facet_wrap(~Day)+
   xlab("\nPlacental Weight (mg)\n") + # X axis label
-  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
-  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
+  ylab("\nMean Exosome Concentration\n(Exosomes/ml)\n") + # Y axis label
+  ggtitle("Plasma Exosome Concentration vs. Placental Weight\n Throughout Pregnancy\n")+ #title
   labs(color="G.D.")#Label table title
 
-plac_weight <- mean_placenta %>% 
-  inner_join(test7) %>% 
-  filter(Day %in% c('10','14','17'))
+# plac_weight <- mean_placenta %>% 
+#   inner_join(test7) %>% 
+#   filter(Day %in% c('10','14','17'))
 
-summary(lm(particle_conc ~ mean_plac, data=plac_weight))
+plasma_exo_vs_weight_plot +
+  scale_color_npg()
+
+
 
 ```
 
 
 ```{r}
-mean_placenta %>% 
+gd14.5_plot <- mean_placenta %>% 
   inner_join(test7) %>% 
+  filter(!Day == "1") %>% 
+  filter(Day == "14") %>%
   ggplot(aes(x = Pups, y = particle_conc))+
-  geom_point(size= 3,aes(color=factor(Day)))+
-  geom_smooth(method = "lm", se= FALSE)+
-  facet_wrap(~Day)+
-  scale_x_continuous(breaks=seq(1,12,2))+
-  xlab("\nNumbr of Pups\n") + # X axis label
-  ylab("\nMean Exosomes Concentration\n(Exosomes/ml)\n") + # Y axis label
-  ggtitle("Plasma Exosome Concentration\nThroughout Pregnancy\n")+ #title
-  labs(color="G.D.")#Label table title
+  geom_point(size = 5,alpha = 0.5,aes(color=factor(Day)))+
+  geom_smooth(method = "lm", se= FALSE, color = "Blue")+
+  # facet_wrap(~Day)+
+  scale_x_continuous(limits=c(1,12),
+                     breaks=seq(2,12,2))+
+  scale_y_continuous(limits = c(0,5.5E11),
+                     expand=c(0,0)) +
+  xlab("\nNumber of Pups\n") + # X axis label
+  ylab("\nMean Exosome Concentration\n(Exosomes/ml)\n") + # Y axis label
+  ggtitle("GD14.5 Linear Regression \nExosome Concentration vs. Number of Pups")+ #title
+  guides(color=FALSE)
+
+gd14.5_plot
+
+# ggsave(plot = gd14.5_plot, "gd14.5_plot.png",
+#        height = 5, width = 7, dpi = 600, units= "in")
+
+
+
 ```
 
+```{r}
+GD14 <- mean_placenta %>% 
+  inner_join(test7) %>% 
+  filter(Day == "14")
+
+lm(particle_conc~Pups, GD14 ) %>% 
+  summary()
+```
+```{r}
+
+```
 
 
 ```{r}
@@ -858,7 +951,7 @@ nanosight_plot <- test1 %>%
 
 nanosight_plot
 
-ggsave("Nanosight_plot.png", height = 5, width = 7, units = "in", dpi = 600)
+# ggsave("Nanosight_plot.png", height = 5, width = 7, units = "in", dpi = 600)
 ```
 
 
@@ -942,8 +1035,8 @@ ASRI_plot <- test2 %>%
   guides(color = guide_legend(reverse = TRUE))+
   theme(legend.position = c(.85,.4))
 
-ggsave(plot = ASRI_plot, "nanosight_sample_plot.png",
-       height = 5, width = 7, dpi = 600, units= "in")
+# ggsave(plot = ASRI_plot, "nanosight_sample_plot.png",
+#        height = 5, width = 7, dpi = 600, units= "in")
 
 
 
